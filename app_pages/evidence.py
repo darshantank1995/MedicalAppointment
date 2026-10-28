@@ -6,7 +6,7 @@ st.title('Evidence and potential impact')
 d, report, _, _ = context()
 c = report['classification']
 st.subheader('No-show model comparison')
-st.caption('Candidates fitted on the earliest 60% of dates; probabilities calibrated on the next 10%; model and threshold selected on the next 10%. Final 20% of dates used only for testing. Natural class proportions retained.')
+st.caption('Candidates fitted on the earliest 60% of dates; probabilities calibrated on the next 10%; model selected by F1 with ROC-AUC as the tie-breaker and threshold selected on the next 10%. Final 20% of dates used only for testing. Natural class proportions retained.')
 st.dataframe(pd.DataFrame(c['validation_comparison']), hide_index=True)
 st.write('Final test metrics', c['test'])
 matrix = pd.DataFrame(c['test']['confusion_matrix'], index=['Actually attended', 'Actually missed'], columns=['Predicted attended', 'Predicted missed'])

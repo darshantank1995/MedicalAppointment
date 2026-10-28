@@ -184,7 +184,9 @@ def fit_classifier(d):
         metrics = classification_metrics(validation.no_show, p, threshold)
         rows.append({'model': name, **{k: v for k, v in metrics.items() if k != 'confusion_matrix'}})
         candidates[name] = (model, threshold)
-    scores = pd.DataFrame(rows).sort_values(['roc_auc', 'f1'], ascending=False)
+    # The stated clinic target requires both F1 and ROC-AUC. Select first by
+    # F1, then use ROC-AUC as the tie-breaker; the final test remains untouched.
+    scores = pd.DataFrame(rows).sort_values(['f1', 'roc_auc'], ascending=False)
     selected = scores.iloc[0]['model']
     model, threshold = candidates[selected]
     p = model.predict_proba(test[FEATURES])[:, 1]
