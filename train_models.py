@@ -17,7 +17,7 @@ import xgboost
 from clinic_ml import DATE, prepare_data, fit_classifier, daily_series, fit_forecaster, forecast_table
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_DATA = ROOT / 'Medical_appointment_data.csv'
+DEFAULT_DATA = ROOT / 'artifacts' / 'notebook_encoded.csv'
 
 
 def write_report(report, output):
@@ -83,11 +83,38 @@ def write_report(report, output):
     (output / 'REPORT.md').write_text('\n'.join(lines), encoding='utf-8')
 
 
+
+def print_terminal_metrics(report):
+    """Print final selected-model results and all validation candidate metrics."""
+    classification = report['classification']
+    classification_test = classification['test']
+    demand = report['demand']['All specialties']
+    demand_test = demand['test']
+    final_mape = f"{demand_test['mape']:.2%}" if demand_test['mape'] is not None else 'N/A'
+    final_r_squared = f"{demand_test['r2']:.3f}" if demand_test['r2'] is not None else 'N/A'
+
+    print('\nFinal test metrics', flush=True)
+    print(f"No-show classification | F1-Score: {classification_test['f1']:.3f} | ROC-AUC: {classification_test['roc_auc']:.3f}", flush=True)
+    print(f'Overall demand | MAPE: {final_mape} | R2: {final_r_squared}', flush=True)
+
+    print('\nClassification validation metrics (all candidate models)', flush=True)
+    for row in classification.get('validation_comparison', []):
+        print(f"{row['model']} | F1-Score: {row['f1']:.3f} | ROC-AUC: {row['roc_auc']:.3f}", flush=True)
+
+    print('\nAll-specialties demand validation metrics (all candidate models)', flush=True)
+    for row in demand.get('validation_comparison', []):
+        mape = f"{row['mape']:.2%}" if row['mape'] is not None else 'N/A'
+        r_squared = f"{row['r2']:.3f}" if row['r2'] is not None else 'N/A'
+        print(f"{row['model']} | MAPE: {mape} | R2: {r_squared}", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', type=Path, default=DEFAULT_DATA)
     parser.add_argument('--output', type=Path, default=ROOT / 'artifacts')
     args = parser.parse_args()
+    if not args.data.is_file():
+        parser.error(f'Training data not found: {args.data}. Run the notebook One-hot encoding section first, or pass --data PATH.')
     args.output.mkdir(parents=True, exist_ok=True)
     raw = pd.read_csv(args.data)
     d = prepare_data(raw)
@@ -122,6 +149,7 @@ def main():
     daily_series(d).to_csv(args.output / 'daily_demand.csv', index_label='date')
     (args.output / 'metrics.json').write_text(json.dumps(report, indent=2, allow_nan=False), encoding='utf-8')
     write_report(report, args.output)
+    print_terminal_metrics(report)
     print('Saved trained models, metrics and report to', args.output, flush=True)
 
 

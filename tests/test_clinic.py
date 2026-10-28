@@ -7,15 +7,15 @@ import pandas as pd
 import pytest
 from clinic_ml import (DATE, FEATURES, prepare_data, target_values, recursive_forecast,
     regression_metrics, load_analysis_data, no_show_summary)
-from train_models import DEFAULT_DATA
+from train_models import DEFAULT_DATA, print_terminal_metrics
 from ui_helpers import DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_training_and_dashboard_use_original_source_extract():
-    assert DEFAULT_DATA.name == 'Medical_appointment_data.csv'
-    assert DATA == DEFAULT_DATA
+def test_training_uses_encoded_extract_and_dashboard_uses_original_source_extract():
+    assert DEFAULT_DATA == ROOT / 'artifacts' / 'notebook_encoded.csv'
+    assert DATA == ROOT / 'Medical_appointment_data.csv'
 
 
 def test_encoded_categories_and_outcome_are_recovered():
@@ -98,3 +98,30 @@ def test_saved_comparisons_include_boosted_models():
     demand = {row['model'] for row in metrics['demand']['All specialties']['validation_comparison']}
     assert {'XGBoost', 'LightGBM'} <= classification
     assert {'XGBoost', 'LightGBM'} <= demand
+
+
+def test_terminal_metrics_include_requested_scores(capsys):
+    report = {
+        'classification': {
+            'test': {'f1': .71234, 'roc_auc': .81234},
+            'validation_comparison': [
+                {'model': 'Logistic regression', 'f1': .70001, 'roc_auc': .80001},
+                {'model': 'LightGBM', 'f1': .71001, 'roc_auc': .81001},
+            ],
+        },
+        'demand': {'All specialties': {
+            'test': {'mape': .15234, 'r2': .67891},
+            'validation_comparison': [
+                {'model': 'Ridge regression', 'mape': .20001, 'r2': .60001},
+                {'model': 'LightGBM', 'mape': .15001, 'r2': .70001},
+            ],
+        }},
+    }
+    print_terminal_metrics(report)
+    output = capsys.readouterr().out
+    assert 'F1-Score: 0.712' in output
+    assert 'ROC-AUC: 0.812' in output
+    assert 'MAPE: 15.23%' in output
+    assert 'R2: 0.679' in output
+    assert 'Logistic regression | F1-Score: 0.700 | ROC-AUC: 0.800' in output
+    assert 'LightGBM | MAPE: 15.00% | R2: 0.700' in output
