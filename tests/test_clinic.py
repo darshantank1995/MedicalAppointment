@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from clinic_ml import (DATE, FEATURES, prepare_data, target_values, recursive_forecast,
-    regression_metrics, load_analysis_data, no_show_summary)
+    regression_metrics, load_analysis_data, no_show_summary, f1_optimal_threshold)
 from train_models import DEFAULT_DATA, print_terminal_metrics
 from ui_helpers import DATA
 
@@ -125,3 +125,11 @@ def test_terminal_metrics_include_requested_scores(capsys):
     assert 'R2: 0.679' in output
     assert 'Logistic regression | F1-Score: 0.700 | ROC-AUC: 0.800' in output
     assert 'LightGBM | MAPE: 15.00% | R2: 0.700' in output
+
+
+def test_f1_threshold_uses_exact_validation_probabilities():
+    y_true = np.array([1, 1, 0, 0])
+    probabilities = np.array([.91, .49, .48, .10])
+    threshold = f1_optimal_threshold(y_true, probabilities)
+    assert threshold == pytest.approx(.49)
+    assert (probabilities >= threshold).tolist() == [True, True, False, False]

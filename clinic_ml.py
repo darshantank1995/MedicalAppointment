@@ -17,7 +17,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import (average_precision_score, brier_score_loss, confusion_matrix,
-    f1_score, mean_absolute_error, mean_squared_error, precision_score, recall_score,
+    f1_score, mean_absolute_error, mean_squared_error, precision_recall_curve, precision_score, recall_score,
     r2_score, roc_auc_score)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -145,6 +145,15 @@ def classification_metrics(y, probabilities, threshold):
         'records': int(len(y)), 'confusion_matrix': confusion_matrix(y, predictions, labels=[0, 1]).tolist()}
 
 
+def f1_optimal_threshold(y_true, probabilities):
+    """Select the exact probability threshold that maximises validation F1."""
+    precision, recall, thresholds = precision_recall_curve(y_true, probabilities)
+    if len(thresholds) == 0:
+        return .5
+    scores = 2 * precision[:-1] * recall[:-1] / (precision[:-1] + recall[:-1] + 1e-12)
+    return float(thresholds[int(np.nanargmax(scores))])
+
+
 def fit_classifier(d):
     """60/10/10/20% date blocks: fit, calibrate, select, then untouched test."""
     dates = d[DATE].drop_duplicates().sort_values().to_numpy()
@@ -179,8 +188,7 @@ def fit_classifier(d):
         model = CalibratedClassifierCV(FrozenEstimator(pipeline), method='sigmoid')
         model.fit(calibrate[FEATURES], calibrate.no_show)
         p = model.predict_proba(validation[FEATURES])[:, 1]
-        thresholds = np.unique(np.r_[np.linspace(.05, .95, 91), np.quantile(p, np.linspace(0, 1, 101))])
-        threshold = max(thresholds, key=lambda t: f1_score(validation.no_show, p >= t, zero_division=0))
+        threshold = f1_optimal_threshold(validation.no_show, p)
         metrics = classification_metrics(validation.no_show, p, threshold)
         rows.append({'model': name, **{k: v for k, v in metrics.items() if k != 'confusion_matrix'}})
         candidates[name] = (model, threshold)
