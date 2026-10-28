@@ -5,15 +5,15 @@ Date range: 2020-01-01 to 2021-05-12.
 
 ## No-show classification
 
-Selected model: **XGBoost**, chosen by validation F1 with ROC-AUC as the tie-breaker, using a validation-tuned F1 threshold.
-Untouched chronological test: F1 **0.613**, ROC-AUC **0.763**, precision **0.512**, recall **0.763**.
-PR-AUC (average precision): 0.546; Brier score: 0.175.
-Threshold: 0.340; test prevalence: 31.09%; test appointments: 20,672.
+Selected model: **Histogram gradient boosting**, chosen by validation F1 with ROC-AUC as the tie-breaker, using a validation-tuned F1 threshold.
+Untouched chronological test: F1 **0.631**, ROC-AUC **0.776**, precision **0.512**, recall **0.820**.
+PR-AUC (average precision): 0.551; Brier score: 0.170.
+Threshold: 0.388; test prevalence: 31.09%; test appointments: 20,672.
 Target attainment: F1 > 0.70 = False; ROC-AUC > 0.75 = True.
-Warm single-appointment prediction p95: 0.511 seconds (10 measurements on this computer).
+Warm single-appointment prediction p95: 0.216 seconds (10 measurements on this computer).
 
 Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:
-`[[9560, 4685], [1520, 4907]]`
+`[[9229, 5016], [1156, 5271]]`
 
 ## Overall demand
 
@@ -21,7 +21,7 @@ Selected model: **Weekly seasonal baseline**, chosen by MAE on three expanding 2
 Final test comprises two successive 28-day forecasts, 2021-03-18 to 2021-05-12.
 MAE: **164.98** appointments/day; RMSE: **313.59**; MAPE: **3757.17%**; R²: **-0.077**.
 Target attainment: MAPE < 20% = False; R² > 0.65 = False.
-28-day prediction latency: 0.003 seconds.
+28-day prediction latency: 0.001 seconds.
 Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain them.
 
 ## Specialty forecasts
@@ -29,9 +29,9 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 | Specialty | Model | MAE | MAPE | R² |
 |---|---|---:|---:|---:|
 | All specialties | Weekly seasonal baseline | 164.98 | 3757.2% | -0.077 |
+| Unknown | Weekly seasonal baseline | 29.52 | 424.5% | -0.019 |
 | assist | Ridge regression | 1.26 | 43.0% | -0.116 |
 | enf | Ridge regression | 4.02 | 113.7% | -0.030 |
-| general | Weekly seasonal baseline | 29.52 | 424.5% | -0.019 |
 | occupational therapy | Weekly seasonal baseline | 18.00 | 473.6% | -0.209 |
 | pedagogo | Weekly seasonal baseline | 6.36 | 122.2% | -0.515 |
 | physiotherapy | LightGBM | 55.35 | 2258.4% | -0.243 |
@@ -42,11 +42,11 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 ## Interpretation and operational recommendations
 
 Largest validation permutation signals (decrease in ROC-AUC when shuffled):
-- place: 0.1864 (repeat SD 0.0094).
-- age: 0.0125 (repeat SD 0.0029).
-- specialty: 0.0085 (repeat SD 0.0022).
-- disability: 0.0071 (repeat SD 0.0011).
-- companion_child: 0.0061 (repeat SD 0.0010).
+- place: 0.2260 (repeat SD 0.0059).
+- age: 0.0220 (repeat SD 0.0031).
+- specialty: 0.0107 (repeat SD 0.0023).
+- disability: 0.0105 (repeat SD 0.0035).
+- appointment_hour: 0.0035 (repeat SD 0.0012).
 
 These are predictive associations, not causal explanations. Very small changes imply weak ranking evidence.
 
@@ -58,12 +58,12 @@ These are predictive associations, not causal explanations. Very small changes i
 
 ## Scenario estimates (not measured intervention effects)
 
-Contacting the highest-risk 20% captured 37.7% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.5% relative reduction, or 2.34 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
+Contacting the highest-risk 20% captured 37.6% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.5% relative reduction, or 2.34 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
 Overall test MAE changed by 0.0% relative to a weekly seasonal baseline (positive means improvement). This is a forecast-error comparison, not an observed staffing-efficiency gain. Staff hours require specialty-specific service duration, working hours and utilisation assumptions.
 
 ## Data and evaluation limitations
 
-The input was already filled and encoded. Earlier global imputation cannot be undone without the raw extract, so this is exploratory evidence rather than a production validation. Further pipeline imputation is fitted only on training data.
+The supplied source extract contains missing values. Numeric imputation is fitted on training dates only; categorical missingness is retained as an Unknown category. This prevents validation and test dates from influencing preprocessing.
 No verified patient identifier is present; repeated-patient generalisation cannot be separately measured. Dates are treated as actual service dates and unrecorded calendar dates as zero appointments; verify both assumptions with clinic staff.
 Observed record counts are booked-appointment volume, not unmet demand or actual attendance. Do not infer revenue without a verified payment model.
 Forecast bands use the 90th percentile of validation absolute errors. They are approximate planning ranges, not guaranteed confidence intervals. Horizons beyond 28 days are extrapolations beyond the evaluated horizon.

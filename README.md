@@ -29,9 +29,9 @@ Use Python 3.13 with `requirements-lock.txt` for the saved artifacts. `requireme
 
 ## Data contract
 
-Default input: `Medical_appointment_data_clean_filled.csv`. Keep this source file unchanged. `prepare_data` accepts either readable categories or one-hot columns such as `specialty_physiotherapy`. Dates use `appointment_date_continuous`; outcomes use `no_show` (`yes/no` or `1/0`). The companion field is **`patient_needs_companion`**. Missing and invalid outcomes are rejected. Numeric missing values are imputed inside the fitted pipeline; categorical missingness remains `Unknown`. Invalid ages/hours and binary flags are rejected. Unknown cities use a bounded, infrequent-category encoding.
+Default input: `Medical_appointment_data.csv`. Keep this source file unchanged. `prepare_data` accepts either readable categories or one-hot columns such as `specialty_physiotherapy`. Dates use `appointment_date_continuous`; outcomes use `no_show` (`yes/no` or `1/0`). The companion field is **`patient_needs_companion`**. Missing and invalid outcomes are rejected. Numeric missing values are imputed inside the fitted pipeline using training dates only; categorical missingness remains `Unknown`. Invalid ages/hours and binary flags are rejected. Unknown cities use a bounded, infrequent-category encoding.
 
-The existing notebook now reconstructs readable categories and writes derived outputs under `artifacts/`, avoiding repeated overwrites of its source file. Exploratory imputation in the notebook is separate from model training. Missing rainfall is distinct from observed zero rainfall.
+The existing notebook now reads the original extract, reconstructs readable categories and writes derived outputs under `artifacts/`, avoiding repeated overwrites of its source file. It preserves missingness for data-quality analysis; model imputation happens only inside the fitted training pipeline. Missing rainfall is distinct from observed zero rainfall.
 
 ## Models and evaluation
 
@@ -45,7 +45,7 @@ Model choice prioritises reproducible tabular methods appropriate to 498 daily o
 
 The file has 26,289 location labels rather than 13 validated cities, including apparent generated names and damaged encoding. Location strongly influences classification, so model performance needs validation against original records. The date range is January 2020 to May 2021 and has highly irregular daily counts. Booked volume does not measure unmet demand. Verify that the continuous date is an actual service date and that missing calendar days mean zero demand.
 
-The input was already filled and encoded before this project; earlier preprocessing leakage cannot be ruled out. Access to the raw extract is needed for a production-grade evaluation. Accuracy targets and deployment readiness remain unmet where shown in the report. Outreach reduction and staffing figures in the app are explicit scenarios, not measured gains.
+The model uses the raw extract and fits preprocessing only on training dates. Accuracy targets and deployment readiness remain unmet where shown in the report. Outreach reduction and staffing figures in the app are explicit scenarios, not measured gains.
 
 ## Deployment
 

@@ -17,7 +17,7 @@ import xgboost
 from clinic_ml import DATE, prepare_data, fit_classifier, daily_series, fit_forecaster, forecast_table
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_DATA = ROOT / 'Medical_appointment_data_clean_filled.csv'
+DEFAULT_DATA = ROOT / 'Medical_appointment_data.csv'
 
 
 def write_report(report, output):
@@ -71,7 +71,7 @@ def write_report(report, output):
         f"Contacting the highest-risk 20% captured {row['share_of_all_no_shows']:.1%} of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a {relative:.1%} relative reduction, or {absolute * 100:.2f} percentage points of all appointments. Effectiveness must be established by a randomised pilot.",
         f"Overall test MAE changed by {gain:.1%} relative to a weekly seasonal baseline (positive means improvement). This is a forecast-error comparison, not an observed staffing-efficiency gain. Staff hours require specialty-specific service duration, working hours and utilisation assumptions.", '',
         '## Data and evaluation limitations', '',
-        'The input was already filled and encoded. Earlier global imputation cannot be undone without the raw extract, so this is exploratory evidence rather than a production validation. Further pipeline imputation is fitted only on training data.',
+        'The supplied source extract contains missing values. Numeric imputation is fitted on training dates only; categorical missingness is retained as an Unknown category. This prevents validation and test dates from influencing preprocessing.',
         'No verified patient identifier is present; repeated-patient generalisation cannot be separately measured. Dates are treated as actual service dates and unrecorded calendar dates as zero appointments; verify both assumptions with clinic staff.',
         'Observed record counts are booked-appointment volume, not unmet demand or actual attendance. Do not infer revenue without a verified payment model.',
         'Forecast bands use the 90th percentile of validation absolute errors. They are approximate planning ranges, not guaranteed confidence intervals. Horizons beyond 28 days are extrapolations beyond the evaluated horizon.',

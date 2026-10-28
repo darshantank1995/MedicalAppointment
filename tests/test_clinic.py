@@ -7,8 +7,15 @@ import pandas as pd
 import pytest
 from clinic_ml import (DATE, FEATURES, prepare_data, target_values, recursive_forecast,
     regression_metrics, load_analysis_data, no_show_summary)
+from train_models import DEFAULT_DATA
+from ui_helpers import DATA
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_training_and_dashboard_use_original_source_extract():
+    assert DEFAULT_DATA.name == 'Medical_appointment_data.csv'
+    assert DATA == DEFAULT_DATA
 
 
 def test_encoded_categories_and_outcome_are_recovered():

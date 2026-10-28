@@ -8,7 +8,9 @@ import streamlit as st
 from clinic_ml import prepare_data
 
 ROOT = Path(__file__).resolve().parent
-DATA = ROOT / 'Medical_appointment_data_clean_filled.csv'
+# Match the source used by train_models.py. The fitted classifier handles
+# missing values, so the dashboard must not load a globally filled derivative.
+DATA = ROOT / 'Medical_appointment_data.csv'
 ARTIFACTS = ROOT / 'artifacts'
 
 
