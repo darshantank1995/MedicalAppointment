@@ -1,0 +1,977 @@
+{
+  "data": {
+    "file": "Medical_appointment_data_clean_filled.csv",
+    "sha256": "5ec39748fce6185e713b3d6696db9f16a6d7468bcb0058bfc040cc22cc0376c3",
+    "rows": 109593,
+    "start": "2020-01-01",
+    "end": "2021-05-12",
+    "no_show_rate": 0.3178305183725238,
+    "location_labels": 26289,
+    "duplicates": 36,
+    "input_missing_cells": 0
+  },
+  "versions": {
+    "python": "3.13.3",
+    "pandas": "3.0.5",
+    "numpy": "2.4.6",
+    "sklearn": "1.9.0",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0"
+  },
+  "demand": {
+    "All specialties": {
+      "selected_model": "Weekly seasonal baseline",
+      "test": {
+        "mae": 164.98214285714286,
+        "rmse": 313.58733688901225,
+        "mape": 37.57170533085946,
+        "wape": 1.240967092008059,
+        "r2": -0.07694415642750418,
+        "zero_days_excluded_from_mape": 0,
+        "days": 56,
+        "latency_28_days_seconds": 0.001178400001663249
+      },
+      "baseline_test": {
+        "mae": 164.98214285714286,
+        "rmse": 313.58733688901225,
+        "mape": 37.57170533085946,
+        "wape": 1.240967092008059,
+        "r2": -0.07694415642750418,
+        "zero_days_excluded_from_mape": 0,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 168.95238095238096,
+          "rmse": 212.11491719169138,
+          "mape": 2.2128042881132917,
+          "wape": 0.6712069617858494,
+          "r2": -0.03461676240176215,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 178.33053579612292,
+          "rmse": 213.5190083880324,
+          "mape": 2.8468550759568276,
+          "wape": 0.7084641036168334,
+          "r2": -0.04835935397930635,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 185.67519002507802,
+          "rmse": 218.13781349180314,
+          "mape": 3.815940989474333,
+          "wape": 0.737642639146167,
+          "r2": -0.09420576385073298,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 178.9794947306315,
+          "rmse": 216.9374582058597,
+          "mape": 2.631616496765183,
+          "wape": 0.7110422605643704,
+          "r2": -0.08219664076256672,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 183.97967872355397,
+          "rmse": 226.4331037546475,
+          "mape": 2.7109979649826093,
+          "wape": 0.7309067826701918,
+          "r2": -0.17900847223784777,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "assist": {
+      "selected_model": "Ridge regression",
+      "test": {
+        "mae": 1.2628476902054666,
+        "rmse": 1.4705583146532462,
+        "mape": 0.4295086869879647,
+        "wape": 1.9113370446353009,
+        "r2": -0.11559976136068673,
+        "zero_days_excluded_from_mape": 42,
+        "days": 56,
+        "latency_28_days_seconds": 0.19855319999624044
+      },
+      "baseline_test": {
+        "mae": 1.1607142857142858,
+        "rmse": 2.5877458475338284,
+        "mape": 1.238095238095238,
+        "wape": 1.7567567567567568,
+        "r2": -2.4545155453199534,
+        "zero_days_excluded_from_mape": 42,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 1.6785714285714286,
+          "rmse": 2.2598988599366248,
+          "mape": 0.7652173913043477,
+          "wape": 1.128,
+          "r2": -0.4948355249512584,
+          "zero_days_excluded_from_mape": 38,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 1.4207668770427433,
+          "rmse": 1.8661238683249395,
+          "mape": 0.5144619508783113,
+          "wape": 0.9547553413727234,
+          "r2": -0.019286658143793822,
+          "zero_days_excluded_from_mape": 38,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 1.5125894509320363,
+          "rmse": 1.8865004580078644,
+          "mape": 0.551339877155875,
+          "wape": 1.0164601110263283,
+          "r2": -0.04166778733225773,
+          "zero_days_excluded_from_mape": 38,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 1.4917341894691898,
+          "rmse": 1.866952388709365,
+          "mape": 0.6306155774328444,
+          "wape": 1.0024453753232956,
+          "r2": -0.02019194343422437,
+          "zero_days_excluded_from_mape": 38,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 1.53061364079277,
+          "rmse": 1.885066459584989,
+          "mape": 0.6507893564509603,
+          "wape": 1.0285723666127415,
+          "r2": -0.04008476917745529,
+          "zero_days_excluded_from_mape": 38,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "enf": {
+      "selected_model": "Ridge regression",
+      "test": {
+        "mae": 4.015613483553639,
+        "rmse": 5.0434451339098425,
+        "mape": 1.1374838545356298,
+        "wape": 1.8739529589916983,
+        "r2": -0.03006661332164029,
+        "zero_days_excluded_from_mape": 41,
+        "days": 56,
+        "latency_28_days_seconds": 0.26130010000633774
+      },
+      "baseline_test": {
+        "mae": 2.892857142857143,
+        "rmse": 5.154748157905347,
+        "mape": 2.126900599400599,
+        "wape": 1.35,
+        "r2": -0.07603305785123982,
+        "zero_days_excluded_from_mape": 41,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 3.1666666666666665,
+          "rmse": 4.1259919442249915,
+          "mape": 0.9735381285381285,
+          "wape": 0.83125,
+          "r2": -0.47278077488965176,
+          "zero_days_excluded_from_mape": 19,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 2.891358053518034,
+          "rmse": 3.5363855646276945,
+          "mape": 0.6906453229280787,
+          "wape": 0.758981489048484,
+          "r2": -0.08193351290100015,
+          "zero_days_excluded_from_mape": 19,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 3.1019821765639444,
+          "rmse": 3.6595457337399,
+          "mape": 0.8736356860143691,
+          "wape": 0.8142703213480355,
+          "r2": -0.15860583913766568,
+          "zero_days_excluded_from_mape": 19,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 3.1099335572549274,
+          "rmse": 3.7408015314716585,
+          "mape": 0.8156539976856184,
+          "wape": 0.8163575587794185,
+          "r2": -0.21062793117343226,
+          "zero_days_excluded_from_mape": 19,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 3.1401857575790024,
+          "rmse": 3.7345496052718925,
+          "mape": 0.8791584225575978,
+          "wape": 0.8242987613644882,
+          "r2": -0.20658471655091182,
+          "zero_days_excluded_from_mape": 19,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "general": {
+      "selected_model": "Weekly seasonal baseline",
+      "test": {
+        "mae": 29.517857142857142,
+        "rmse": 54.69574937780814,
+        "mape": 4.245492649142797,
+        "wape": 1.241923365890308,
+        "r2": -0.018673344221059374,
+        "zero_days_excluded_from_mape": 25,
+        "days": 56,
+        "latency_28_days_seconds": 0.0013671999986399896
+      },
+      "baseline_test": {
+        "mae": 29.517857142857142,
+        "rmse": 54.69574937780814,
+        "mape": 4.245492649142797,
+        "wape": 1.241923365890308,
+        "r2": -0.018673344221059374,
+        "zero_days_excluded_from_mape": 25,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 29.023809523809526,
+          "rmse": 35.942745476395544,
+          "mape": 1.334387107528399,
+          "wape": 0.6238485158648925,
+          "r2": 0.10542637606449767,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 32.15665604967606,
+          "rmse": 38.281002909602016,
+          "mape": 2.307112747775593,
+          "wape": 0.6911870798804475,
+          "r2": -0.014752683339072092,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 33.61048245719924,
+          "rmse": 39.44892001796805,
+          "mape": 3.2269352340483746,
+          "wape": 0.7224361633584279,
+          "r2": -0.07761550218934854,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 34.10383931795756,
+          "rmse": 40.848001393448584,
+          "mape": 2.355300996495878,
+          "wape": 0.733040558523141,
+          "r2": -0.15540759657645697,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 34.27115309418504,
+          "rmse": 40.97068258186785,
+          "mape": 2.378473180960792,
+          "wape": 0.7366368628228104,
+          "r2": -0.16235822477863482,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "occupational therapy": {
+      "selected_model": "Weekly seasonal baseline",
+      "test": {
+        "mae": 18.0,
+        "rmse": 34.81994502334217,
+        "mape": 4.736172193622152,
+        "wape": 1.289002557544757,
+        "r2": -0.20919120874088382,
+        "zero_days_excluded_from_mape": 30,
+        "days": 56,
+        "latency_28_days_seconds": 0.0014535000009345822
+      },
+      "baseline_test": {
+        "mae": 18.0,
+        "rmse": 34.81994502334217,
+        "mape": 4.736172193622152,
+        "wape": 1.289002557544757,
+        "r2": -0.20919120874088382,
+        "zero_days_excluded_from_mape": 30,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 18.178571428571427,
+          "rmse": 23.05918885121917,
+          "mape": 2.5575621496469227,
+          "wape": 0.7046608214120904,
+          "r2": -0.02232662647145478,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 19.41436397464047,
+          "rmse": 22.972283151828634,
+          "mape": 3.112693394530077,
+          "wape": 0.7525641780663588,
+          "r2": -0.014635238089236502,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 20.728158987721805,
+          "rmse": 23.69936876227231,
+          "mape": 3.8783553287359394,
+          "wape": 0.8034911651908775,
+          "r2": -0.07987920252715686,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 20.021432774407522,
+          "rmse": 23.93084591533087,
+          "mape": 2.8557469943473426,
+          "wape": 0.7760961481542371,
+          "r2": -0.10107707578378733,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 22.953473119796886,
+          "rmse": 26.835520227160874,
+          "mape": 3.9070409331917526,
+          "wape": 0.8897516114734372,
+          "r2": -0.38459148848758296,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "pedagogo": {
+      "selected_model": "Weekly seasonal baseline",
+      "test": {
+        "mae": 6.357142857142857,
+        "rmse": 11.962739772190268,
+        "mape": 1.221933519550878,
+        "wape": 1.5084745762711864,
+        "r2": -0.5150974990547184,
+        "zero_days_excluded_from_mape": 39,
+        "days": 56,
+        "latency_28_days_seconds": 0.003455400001257658
+      },
+      "baseline_test": {
+        "mae": 6.357142857142857,
+        "rmse": 11.962739772190268,
+        "mape": 1.221933519550878,
+        "wape": 1.5084745762711864,
+        "r2": -0.5150974990547184,
+        "zero_days_excluded_from_mape": 39,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 5.690476190476191,
+          "rmse": 7.491264754302015,
+          "mape": 1.4572957659929795,
+          "wape": 0.7220543806646526,
+          "r2": -0.12753283141793004,
+          "zero_days_excluded_from_mape": 9,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 5.74279238538497,
+          "rmse": 7.198376632362601,
+          "mape": 1.4616228377597247,
+          "wape": 0.7286926893841956,
+          "r2": -0.041089428036615194,
+          "zero_days_excluded_from_mape": 9,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 6.1708214775307555,
+          "rmse": 7.47854609833216,
+          "mape": 2.1740524212831596,
+          "wape": 0.783004537934416,
+          "r2": -0.12370743508282578,
+          "zero_days_excluded_from_mape": 9,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 6.394295622195516,
+          "rmse": 7.771745145778751,
+          "mape": 1.782031632667757,
+          "wape": 0.8113607738133284,
+          "r2": -0.21354533623803063,
+          "zero_days_excluded_from_mape": 9,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 6.3409563045834165,
+          "rmse": 7.779415481221471,
+          "mape": 2.046233824930127,
+          "wape": 0.804592642877654,
+          "r2": -0.21594193907288473,
+          "zero_days_excluded_from_mape": 9,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "physiotherapy": {
+      "selected_model": "LightGBM",
+      "test": {
+        "mae": 55.34601995650757,
+        "rmse": 65.86781603933187,
+        "mape": 22.58353106695181,
+        "wape": 2.1214080202357453,
+        "r2": -0.24347035784515159,
+        "zero_days_excluded_from_mape": 23,
+        "days": 56,
+        "latency_28_days_seconds": 0.18971659999806434
+      },
+      "baseline_test": {
+        "mae": 31.375,
+        "rmse": 62.03153000116726,
+        "mape": 2.833104395494727,
+        "wape": 1.2026009582477755,
+        "r2": -0.1028435190356507,
+        "zero_days_excluded_from_mape": 23,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 34.80952380952381,
+          "rmse": 44.124013546237734,
+          "mape": 1.5336119347928132,
+          "wape": 0.7156142927068038,
+          "r2": -0.14045002585153132,
+          "zero_days_excluded_from_mape": 2,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 34.78517741586725,
+          "rmse": 43.002580592666824,
+          "mape": 2.527302253023443,
+          "wape": 0.7151137794745103,
+          "r2": -0.08321652757221476,
+          "zero_days_excluded_from_mape": 2,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 35.56735675895783,
+          "rmse": 42.19581488100757,
+          "mape": 3.63173872005908,
+          "wape": 0.7311938247069157,
+          "r2": -0.04295362420708382,
+          "zero_days_excluded_from_mape": 2,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 35.0952771845318,
+          "rmse": 43.3121986306955,
+          "mape": 2.551831818107087,
+          "wape": 0.721488811429435,
+          "r2": -0.09887097199984729,
+          "zero_days_excluded_from_mape": 2,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 34.503501072762454,
+          "rmse": 42.86091497375078,
+          "mape": 2.852646610011598,
+          "wape": 0.7093230763857186,
+          "r2": -0.07609129131499204,
+          "zero_days_excluded_from_mape": 2,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "psychotherapy": {
+      "selected_model": "Weekly seasonal baseline",
+      "test": {
+        "mae": 42.857142857142854,
+        "rmse": 79.9339012649112,
+        "mape": 9.519396669241601,
+        "wape": 1.2422360248447204,
+        "r2": -0.02108327150276801,
+        "zero_days_excluded_from_mape": 16,
+        "days": 56,
+        "latency_28_days_seconds": 0.0013149000005796552
+      },
+      "baseline_test": {
+        "mae": 42.857142857142854,
+        "rmse": 79.9339012649112,
+        "mape": 9.519396669241601,
+        "wape": 1.2422360248447204,
+        "r2": -0.02108327150276801,
+        "zero_days_excluded_from_mape": 16,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 43.61904761904762,
+          "rmse": 55.027482311330665,
+          "mape": 1.5014472860401948,
+          "wape": 0.6652142338416849,
+          "r2": -0.00012357759380954292,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 46.79957105092804,
+          "rmse": 55.71231420311993,
+          "mape": 2.814306537832932,
+          "wape": 0.7137189484890986,
+          "r2": -0.025172098018314992,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 47.1980755079828,
+          "rmse": 54.914015461536614,
+          "mape": 4.103267026831513,
+          "wape": 0.7197963585095416,
+          "r2": 0.003996686246257153,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 46.72588442620777,
+          "rmse": 55.230277786828516,
+          "mape": 3.4613264796472802,
+          "wape": 0.7125951873277874,
+          "r2": -0.00750876987112159,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 45.44200508751368,
+          "rmse": 53.96677079684256,
+          "mape": 3.4551350127326272,
+          "wape": 0.6930153281320168,
+          "r2": 0.03806163941378382,
+          "zero_days_excluded_from_mape": 1,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "sem especialidade": {
+      "selected_model": "Weekly seasonal baseline",
+      "test": {
+        "mae": 0.7321428571428571,
+        "rmse": 1.5177520972054126,
+        "mape": 0.8762626262626263,
+        "wape": 1.5185185185185186,
+        "r2": -0.1317562274792421,
+        "zero_days_excluded_from_mape": 45,
+        "days": 56,
+        "latency_28_days_seconds": 0.0011610000001383014
+      },
+      "baseline_test": {
+        "mae": 0.7321428571428571,
+        "rmse": 1.5177520972054126,
+        "mape": 0.8762626262626263,
+        "wape": 1.5185185185185186,
+        "r2": -0.1317562274792421,
+        "zero_days_excluded_from_mape": 45,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 0.7023809523809523,
+          "rmse": 1.096531327587567,
+          "mape": 0.5447154471544715,
+          "wape": 0.8805970149253731,
+          "r2": -0.30222563315425943,
+          "zero_days_excluded_from_mape": 43,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 0.7921656659120787,
+          "rmse": 0.9501465454915146,
+          "mape": 0.5053350436450371,
+          "wape": 0.9931629244270838,
+          "r2": 0.022255594933363043,
+          "zero_days_excluded_from_mape": 43,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 0.8438727155817293,
+          "rmse": 0.990718364826151,
+          "mape": 0.4277003215624891,
+          "wape": 1.0579896732666456,
+          "r2": -0.06302769455368074,
+          "zero_days_excluded_from_mape": 43,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 0.8184025897866204,
+          "rmse": 0.9875184198974238,
+          "mape": 0.45057006931401844,
+          "wape": 1.026056978239942,
+          "r2": -0.056171787370159265,
+          "zero_days_excluded_from_mape": 43,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 0.8249402162342592,
+          "rmse": 1.044548658968299,
+          "mape": 0.48224189473368057,
+          "wape": 1.0342534054280264,
+          "r2": -0.1816844041628003,
+          "zero_days_excluded_from_mape": 43,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    },
+    "speech therapy": {
+      "selected_model": "LightGBM",
+      "test": {
+        "mae": 58.11002534712169,
+        "rmse": 70.2656837895195,
+        "mape": 28.502804553007504,
+        "wape": 2.142305081921537,
+        "r2": -0.2829297369272825,
+        "zero_days_excluded_from_mape": 23,
+        "days": 56,
+        "latency_28_days_seconds": 0.19234530000539962
+      },
+      "baseline_test": {
+        "mae": 33.767857142857146,
+        "rmse": 63.852928112745374,
+        "mape": 11.529654393821279,
+        "wape": 1.2448979591836735,
+        "r2": -0.059443871197502274,
+        "zero_days_excluded_from_mape": 23,
+        "days": 56
+      },
+      "validation_comparison": [
+        {
+          "model": "Weekly seasonal baseline",
+          "mae": 36.035714285714285,
+          "rmse": 46.73697934286338,
+          "mape": 1.8743101286719521,
+          "wape": 0.7037898163217856,
+          "r2": -0.2101032330549908,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "Ridge regression",
+          "mae": 36.480755762950814,
+          "rmse": 44.54751201886772,
+          "mape": 2.699283449976218,
+          "wape": 0.7124816284789278,
+          "r2": -0.09938054795244544,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "Random forest",
+          "mae": 40.56957180941934,
+          "rmse": 47.70961192162981,
+          "mape": 3.425123753643846,
+          "wape": 0.7923376033460182,
+          "r2": -0.26099367724656974,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "XGBoost",
+          "mae": 39.25487284433274,
+          "rmse": 49.3282686120682,
+          "mape": 2.1774596778486894,
+          "wape": 0.7666610832187748,
+          "r2": -0.348009291451467,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        },
+        {
+          "model": "LightGBM",
+          "mae": 35.009950327194055,
+          "rmse": 43.93006957384076,
+          "mape": 2.249065453471021,
+          "wape": 0.6837562956252734,
+          "r2": -0.06911623177971138,
+          "zero_days_excluded_from_mape": 0,
+          "days": 84
+        }
+      ],
+      "test_start": "2021-03-18",
+      "test_end": "2021-05-12",
+      "evaluation_horizon_days": 28,
+      "targets_met": {
+        "mape_below_0_20": false,
+        "r2_above_0_65": false
+      }
+    }
+  },
+  "skipped_forecasts": {},
+  "classification": {
+    "selected_model": "LightGBM",
+    "test": {
+      "f1": 0.6134756173222484,
+      "roc_auc": 0.7630139674328253,
+      "average_precision": 0.546615103943555,
+      "precision": 0.5101640697554432,
+      "recall": 0.7692547067060838,
+      "brier_score": 0.1747099253500666,
+      "threshold": 0.35999999999999993,
+      "no_show_rate": 0.31090363777089786,
+      "records": 20672,
+      "confusion_matrix": [
+        [
+          9498,
+          4747
+        ],
+        [
+          1483,
+          4944
+        ]
+      ],
+      "latency_p95_seconds": 0.2048800249987835
+    },
+    "validation_comparison": [
+      {
+        "model": "LightGBM",
+        "f1": 0.6173888416879071,
+        "roc_auc": 0.7599762323021908,
+        "average_precision": 0.5415127788146173,
+        "precision": 0.5123384253819037,
+        "recall": 0.7766298539365871,
+        "brier_score": 0.1766334373675706,
+        "threshold": 0.35999999999999993,
+        "no_show_rate": 0.3154996066089693,
+        "records": 8897
+      },
+      {
+        "model": "Histogram gradient boosting",
+        "f1": 0.61768861260243,
+        "roc_auc": 0.7595115834621751,
+        "average_precision": 0.5425711600862869,
+        "precision": 0.5118239288222899,
+        "recall": 0.7787673672960456,
+        "brier_score": 0.17675107498697326,
+        "threshold": 0.3466724562135798,
+        "no_show_rate": 0.3154996066089693,
+        "records": 8897
+      },
+      {
+        "model": "Random forest",
+        "f1": 0.6178489702517163,
+        "roc_auc": 0.7591660948496691,
+        "average_precision": 0.5401215796919354,
+        "precision": 0.5161290322580645,
+        "recall": 0.7695048094050588,
+        "brier_score": 0.1773831302190476,
+        "threshold": 0.38999999999999996,
+        "no_show_rate": 0.3154996066089693,
+        "records": 8897
+      },
+      {
+        "model": "XGBoost",
+        "f1": 0.6185243328100472,
+        "roc_auc": 0.7589894019349936,
+        "average_precision": 0.5434974713479206,
+        "precision": 0.5159523809523809,
+        "recall": 0.7719985749910937,
+        "brier_score": 0.17694656884289292,
+        "threshold": 0.33999999999999997,
+        "no_show_rate": 0.3154996066089693,
+        "records": 8897
+      },
+      {
+        "model": "Logistic regression",
+        "f1": 0.6095292602661325,
+        "roc_auc": 0.7505379467119206,
+        "average_precision": 0.5359778303648575,
+        "precision": 0.509325681492109,
+        "recall": 0.7588172426077663,
+        "brier_score": 0.17963511754405273,
+        "threshold": 0.37999999999999995,
+        "no_show_rate": 0.3154996066089693,
+        "records": 8897
+      }
+    ],
+    "outreach": [
+      {
+        "capacity_fraction": 0.05,
+        "appointments_contacted": 1033,
+        "historical_no_shows_in_group": 647,
+        "group_no_show_rate": 0.6263310745401742,
+        "share_of_all_no_shows": 0.10066905243503968
+      },
+      {
+        "capacity_fraction": 0.1,
+        "appointments_contacted": 2067,
+        "historical_no_shows_in_group": 1256,
+        "group_no_show_rate": 0.6076439283986453,
+        "share_of_all_no_shows": 0.19542554846740315
+      },
+      {
+        "capacity_fraction": 0.2,
+        "appointments_contacted": 4134,
+        "historical_no_shows_in_group": 2414,
+        "group_no_show_rate": 0.5839380745041123,
+        "share_of_all_no_shows": 0.3756029251594834
+      },
+      {
+        "capacity_fraction": 0.3,
+        "appointments_contacted": 6201,
+        "historical_no_shows_in_group": 3469,
+        "group_no_show_rate": 0.5594258990485406,
+        "share_of_all_no_shows": 0.5397541621285203
+      }
+    ],
+    "splits": {
+      "fit": {
+        "start": "2020-01-01",
+        "end": "2020-10-24",
+        "rows": 77311
+      },
+      "calibration": {
+        "start": "2020-10-25",
+        "end": "2020-12-13",
+        "rows": 2713
+      },
+      "validation": {
+        "start": "2020-12-14",
+        "end": "2021-02-01",
+        "rows": 8897
+      },
+      "test": {
+        "start": "2021-02-02",
+        "end": "2021-05-12",
+        "rows": 20672
+      }
+    },
+    "targets_met": {
+      "f1_above_0_70": false,
+      "roc_auc_above_0_75": true
+    }
+  }
+}

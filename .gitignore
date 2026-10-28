@@ -1,1 +1,9 @@
 Medical_appointment_data_clean_filled.csv
+__pycache__/
+*.csv
+.pytest_cache/
+.venv/
+.streamlit/secrets.toml
+artifacts/*.joblib
+artifacts/notebook_*.csv
+artifacts/*.executed.ipynb

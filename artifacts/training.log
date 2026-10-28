@@ -1,0 +1,16 @@
+Classification: Logistic regression
+Classification: Random forest
+Classification: Histogram gradient boosting
+Classification: XGBoost
+Classification: LightGBM
+Forecast: All specialties
+Forecast: assist
+Forecast: enf
+Forecast: general
+Forecast: occupational therapy
+Forecast: pedagogo
+Forecast: physiotherapy
+Forecast: psychotherapy
+Forecast: sem especialidade
+Forecast: speech therapy
+Saved trained models, metrics and report to F:\py project\MedicalAppointment\artifacts
