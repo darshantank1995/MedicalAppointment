@@ -30,7 +30,7 @@ def write_report(report, output):
         f"Date range: {report['data']['start']} to {report['data']['end']}.", '',
         '## No-show classification', '',
         f"Selected model: **{c['selected_model']}**, chosen by validation F1 with ROC-AUC as the tie-breaker, using a validation-tuned F1 threshold.",
-        f"Untouched chronological test: F1 **{cm['f1']:.3f}**, ROC-AUC **{cm['roc_auc']:.3f}**, precision **{cm['precision']:.3f}**, recall **{cm['recall']:.3f}**.",
+        f"Untouched stratified test: F1 **{cm['f1']:.3f}**, ROC-AUC **{cm['roc_auc']:.3f}**, precision **{cm['precision']:.3f}**, recall **{cm['recall']:.3f}**.",
         f"PR-AUC (average precision): {cm['average_precision']:.3f}; Brier score: {cm['brier_score']:.3f}.",
         f"Threshold: {cm['threshold']:.3f}; test prevalence: {cm['no_show_rate']:.2%}; test appointments: {cm['records']:,}.",
         f"Target attainment: F1 > 0.70 = {cm['f1'] > .7}; ROC-AUC > 0.75 = {cm['roc_auc'] > .75}.",

@@ -19,6 +19,7 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import (average_precision_score, brier_score_loss, confusion_matrix,
     f1_score, mean_absolute_error, mean_squared_error, precision_recall_curve, precision_score, recall_score,
     r2_score, roc_auc_score)
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier, XGBRegressor
@@ -148,18 +149,22 @@ def f1_optimal_threshold(y_true, probabilities):
 
 
 def fit_classifier(d):
-    """60/10/10/20% date blocks: fit, calibrate, select, then untouched test."""
-    dates = d[DATE].drop_duplicates().sort_values().to_numpy()
-    if len(dates) < 100 or 'no_show' not in d:
-        raise ValueError('Classification requires labelled data spanning at least 100 dates.')
-    cuts = dates[[int(len(dates) * p) for p in [0.6, 0.7, 0.8]]]
-    fit = d[d[DATE] < cuts[0]]
-    calibrate = d[(d[DATE] >= cuts[0]) & (d[DATE] < cuts[1])]
-    validation = d[(d[DATE] >= cuts[1]) & (d[DATE] < cuts[2])]
-    test = d[d[DATE] >= cuts[2]]
+    """Use a stratified 60/10/10/20 split for fitting, calibration, selection, and testing."""
+    if len(d) < 100 or 'no_show' not in d or d.no_show.nunique() != 2:
+        raise ValueError('Classification requires at least 100 labelled records with both outcomes.')
+    development, test = train_test_split(
+        d, test_size=.2, stratify=d.no_show, random_state=SEED,
+    )
+    fit, calibration_and_validation = train_test_split(
+        development, test_size=.25, stratify=development.no_show, random_state=SEED,
+    )
+    calibrate, validation = train_test_split(
+        calibration_and_validation, test_size=.5,
+        stratify=calibration_and_validation.no_show, random_state=SEED,
+    )
     for frame in [fit, calibrate, validation, test]:
         if frame.no_show.nunique() != 2:
-            raise ValueError('Every chronological classification partition must contain both outcomes.')
+            raise ValueError('Every classification partition must contain both outcomes.')
     estimators = {
         'Logistic regression': LogisticRegression(max_iter=600, class_weight='balanced', random_state=SEED),
         'Random forest': RandomForestClassifier(n_estimators=140, max_depth=12,
@@ -220,8 +225,9 @@ def fit_classifier(d):
         'options': {c: fit[c].value_counts().head(20).index.tolist() for c in CATEGORICAL}}
     report = {'selected_model': selected, 'test': test_metrics,
         'validation_comparison': scores.to_dict('records'), 'outreach': outreach,
-        'splits': {name: {'start': str(frame[DATE].min().date()), 'end': str(frame[DATE].max().date()),
-                          'rows': len(frame)} for name, frame in zip(['fit', 'calibration', 'validation', 'test'], [fit, calibrate, validation, test])},
+        'split_strategy': 'stratified train_test_split with random_state=42',
+        'splits': {name: {'rows': len(frame), 'no_show_rate': float(frame.no_show.mean())}
+                   for name, frame in zip(['fit', 'calibration', 'validation', 'test'], [fit, calibrate, validation, test])},
         'targets_met': {'f1_above_0_70': test_metrics['f1'] > .7, 'roc_auc_above_0_75': test_metrics['roc_auc'] > .75}}
     return bundle, report, importance, reliability
 

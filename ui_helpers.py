@@ -28,18 +28,27 @@ def load_models(modified):
     return report, classifier, forecasters
 
 
+def training_data_fingerprint(report):
+    """Return the fingerprint of the exact CSV used to train the loaded models."""
+    training_file = ARTIFACTS / report['data']['file']
+    if not training_file.is_file():
+        raise OSError(f'Training data not found: {training_file}')
+    return hashlib.sha256(training_file.read_bytes()).hexdigest()
+
+
 def context():
     if not DATA.exists() or not (ARTIFACTS / 'metrics.json').exists():
         st.info('Add the appointment CSV and run python train_models.py to prepare the models.')
         st.stop()
     try:
-        d, fingerprint = load_data(str(DATA), DATA.stat().st_mtime_ns)
+        d, _ = load_data(str(DATA), DATA.stat().st_mtime_ns)
         report, classifier, forecasts = load_models((ARTIFACTS / 'metrics.json').stat().st_mtime_ns)
+        fingerprint = training_data_fingerprint(report)
     except (ValueError, OSError, KeyError) as error:
         st.error(f'Unable to load the project: {error}')
         st.stop()
     if fingerprint != report['data']['sha256']:
-        st.error('The appointment file has changed since training. Run python train_models.py before using these models.')
+        st.error('The training data has changed since these models were created. Run python train_models.py before using them.')
         st.stop()
     return d, report, classifier, forecasts
 

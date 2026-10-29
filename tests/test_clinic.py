@@ -8,7 +8,7 @@ import pytest
 from clinic_ml import (DATE, FEATURES, prepare_data, target_values, recursive_forecast,
     regression_metrics, no_show_summary, f1_optimal_threshold)
 from train_models import DEFAULT_DATA, print_terminal_metrics
-from ui_helpers import DATA
+from ui_helpers import DATA, training_data_fingerprint
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -16,6 +16,11 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_training_uses_encoded_extract_and_dashboard_uses_original_source_extract():
     assert DEFAULT_DATA == ROOT / 'artifacts' / 'notebook_encoded.csv'
     assert DATA == ROOT / 'Medical_appointment_data.csv'
+
+
+def test_dashboard_validates_the_encoded_training_file():
+    report = json.loads((ROOT / 'artifacts' / 'metrics.json').read_text(encoding='utf-8'))
+    assert training_data_fingerprint(report) == report['data']['sha256']
 
 
 def test_encoded_categories_and_outcome_are_recovered():
