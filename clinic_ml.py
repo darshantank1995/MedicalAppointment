@@ -65,7 +65,10 @@ def prepare_data(raw):
         d[category] = d[category].astype('string').str.strip().replace({'nan': 'Unknown', '': 'Unknown'}).fillna('Unknown')
     if DATE not in d:
         raise ValueError(f'Missing required date column: {DATE}')
-    d[DATE] = pd.to_datetime(d[DATE], errors='coerce').dt.normalize()
+    # The appointment extract uses day-month-year dates (for example, 13-01-2020).
+    # Parse mixed input formats explicitly so dates with a day above 12 are not
+    # treated as invalid by pandas' default month-first inference.
+    d[DATE] = pd.to_datetime(d[DATE], errors='coerce', format='mixed', dayfirst=True).dt.normalize()
     if d[DATE].isna().any():
         raise ValueError('Appointment dates contain missing or invalid values.')
     if 'no_show' in d:
@@ -98,16 +101,6 @@ def prepare_data(raw):
     d['companion_child'] = d.patient_needs_companion * d.under_12
     d['chronic_count'] = d[['hipertension', 'diabetes']].sum(axis=1, min_count=2)
     return d.sort_values(DATE, kind='stable').reset_index(drop=True)
-
-
-def load_analysis_data(path):
-    """Readable notebook frame; reconstruct encoded categories without duplicate indicators."""
-    d = prepare_data(pd.read_csv(path))
-    prefixes = tuple(name + '_' for name in CATEGORIES + ['age_group', 'appointment_time_band',
-                                                         'appointment_day_of_week', 'rain_intensity', 'heat_intensity'])
-    d = d.drop(columns=[c for c in d if c.startswith(prefixes)])
-    d['no_show'] = d.no_show.map({0: 'no', 1: 'yes'})
-    return d
 
 
 def no_show_summary(data, column, top_n=12):

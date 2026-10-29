@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from clinic_ml import (DATE, FEATURES, prepare_data, target_values, recursive_forecast,
-    regression_metrics, load_analysis_data, no_show_summary, f1_optimal_threshold)
+    regression_metrics, no_show_summary, f1_optimal_threshold)
 from train_models import DEFAULT_DATA, print_terminal_metrics
 from ui_helpers import DATA
 
@@ -68,14 +68,6 @@ def test_companion_alias_and_no_show_rates():
     result = no_show_summary(data, 'needs_companion').set_index('patient_needs_companion')
     assert result.loc[1, 'no_show_rate'] == 50
     assert result.loc[0, 'no_show_rate'] == 100
-
-
-def test_notebook_frame_has_real_companion_column_and_readable_categories():
-    data = load_analysis_data(ROOT / 'Medical_appointment_data_clean_filled.csv')
-    assert 'patient_needs_companion' in data
-    assert set(data.no_show.unique()) == {'yes', 'no'}
-    assert 'gender_f' not in data
-    assert 'gender' in data and 'specialty' in data
 
 
 def test_saved_classifier_handles_new_city_and_missing_values():
