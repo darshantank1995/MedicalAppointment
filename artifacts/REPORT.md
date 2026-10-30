@@ -5,15 +5,15 @@ Date range: 2020-01-01 to 2021-12-05.
 
 ## No-show classification
 
-Selected model: **LightGBM**, chosen by validation F1 with ROC-AUC as the tie-breaker, using a validation-tuned F1 threshold.
-Untouched stratified test: F1 **0.620**, ROC-AUC **0.764**, precision **0.517**, recall **0.776**.
-PR-AUC (average precision): 0.556; Brier score: 0.176.
-Threshold: 0.328; test prevalence: 31.81%; test appointments: 21,891.
-Target attainment: F1 > 0.70 = False; ROC-AUC > 0.75 = True.
-Warm single-appointment prediction p95: 0.142 seconds (10 measurements on this computer).
+Selected model: **LightGBM**, chosen by validation macro F1 with ROC-AUC as the tie-breaker, using a validation-tuned macro-F1 threshold.
+Untouched stratified test: macro F1 **0.690**, balanced accuracy **0.714**, ROC-AUC **0.763**, precision **0.530**, recall **0.731**.
+PR-AUC (average precision): 0.553; Brier score: 0.176.
+Threshold: 0.413; test prevalence: 31.81%; test appointments: 21,891.
+Target attainment: macro F1 >= 0.69 = False; ROC-AUC > 0.75 = True.
+Warm single-appointment prediction p95: 0.105 seconds (10 measurements on this computer).
 
 Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:
-`[[9877, 5050], [1563, 5401]]`
+`[[10403, 4524], [1872, 5092]]`
 
 ## Overall demand
 
@@ -42,11 +42,11 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 ## Interpretation and operational recommendations
 
 Largest validation permutation signals (decrease in ROC-AUC when shuffled):
-- place: 0.1856 (repeat SD 0.0123).
-- age: 0.0173 (repeat SD 0.0025).
-- specialty: 0.0099 (repeat SD 0.0009).
-- appointment_hour: 0.0055 (repeat SD 0.0013).
-- disability: 0.0050 (repeat SD 0.0030).
+- place: 0.1857 (repeat SD 0.0127).
+- age: 0.0168 (repeat SD 0.0031).
+- specialty: 0.0105 (repeat SD 0.0014).
+- disability: 0.0041 (repeat SD 0.0026).
+- appointment_hour: 0.0037 (repeat SD 0.0016).
 
 These are predictive associations, not causal explanations. Very small changes imply weak ranking evidence.
 
@@ -58,7 +58,7 @@ These are predictive associations, not causal explanations. Very small changes i
 
 ## Scenario estimates (not measured intervention effects)
 
-Contacting the highest-risk 20% captured 37.4% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.5% relative reduction, or 2.38 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
+Contacting the highest-risk 20% captured 37.5% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.5% relative reduction, or 2.38 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
 Overall test MAE changed by 0.0% relative to a weekly seasonal baseline (positive means improvement). This is a forecast-error comparison, not an observed staffing-efficiency gain. Staff hours require specialty-specific service duration, working hours and utilisation assumptions.
 
 ## Data and evaluation limitations

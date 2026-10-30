@@ -5,8 +5,9 @@ import json
 import numpy as np
 import pandas as pd
 import pytest
-from clinic_ml import (DATE, FEATURES, prepare_data, target_values, recursive_forecast,
-    regression_metrics, no_show_summary, f1_optimal_threshold)
+from clinic_ml import (DATE, FEATURES, F1_TARGET, classification_metrics, prepare_data,
+    target_values, recursive_forecast, regression_metrics, no_show_summary,
+    f1_optimal_threshold, balance_training_frame)
 from train_models import DEFAULT_DATA, print_terminal_metrics
 from ui_helpers import DATA, training_data_fingerprint
 
@@ -130,3 +131,15 @@ def test_f1_threshold_uses_exact_validation_probabilities():
     threshold = f1_optimal_threshold(y_true, probabilities)
     assert threshold == pytest.approx(.49)
     assert (probabilities >= threshold).tolist() == [True, True, False, False]
+
+
+def test_classification_uses_macro_f1_and_069_target():
+    metrics = classification_metrics(np.array([0, 0, 0, 1]), np.array([.8, .2, .1, .9]), .5)
+    assert metrics['f1'] == pytest.approx((.8 + (2 / 3)) / 2)
+    assert F1_TARGET == .69
+
+
+def test_balancing_keeps_equal_numbers_of_both_outcomes():
+    frame = pd.DataFrame({'no_show': [0, 0, 0, 0, 1, 1], 'age': range(6)})
+    balanced = balance_training_frame(frame)
+    assert balanced.no_show.value_counts().to_dict() == {0: 2, 1: 2}

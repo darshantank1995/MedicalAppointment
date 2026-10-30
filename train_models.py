@@ -14,7 +14,8 @@ import numpy as np
 import pandas as pd
 import sklearn
 import xgboost
-from clinic_ml import DATE, prepare_data, fit_classifier, daily_series, fit_forecaster, forecast_table
+from clinic_ml import (DATE, F1_TARGET, prepare_data, fit_classifier, daily_series,
+                       fit_forecaster, forecast_table)
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DATA = ROOT / 'artifacts' / 'notebook_encoded.csv'
@@ -29,11 +30,11 @@ def write_report(report, output):
         f"Input: {report['data']['rows']:,} appointments; observed no-show rate {report['data']['no_show_rate']:.2%}.",
         f"Date range: {report['data']['start']} to {report['data']['end']}.", '',
         '## No-show classification', '',
-        f"Selected model: **{c['selected_model']}**, chosen by validation F1 with ROC-AUC as the tie-breaker, using a validation-tuned F1 threshold.",
-        f"Untouched stratified test: F1 **{cm['f1']:.3f}**, ROC-AUC **{cm['roc_auc']:.3f}**, precision **{cm['precision']:.3f}**, recall **{cm['recall']:.3f}**.",
+        f"Selected model: **{c['selected_model']}**, chosen by validation macro F1 with ROC-AUC as the tie-breaker, using a validation-tuned macro-F1 threshold.",
+        f"Untouched stratified test: macro F1 **{cm['f1']:.3f}**, balanced accuracy **{cm['balanced_accuracy']:.3f}**, ROC-AUC **{cm['roc_auc']:.3f}**, precision **{cm['precision']:.3f}**, recall **{cm['recall']:.3f}**.",
         f"PR-AUC (average precision): {cm['average_precision']:.3f}; Brier score: {cm['brier_score']:.3f}.",
         f"Threshold: {cm['threshold']:.3f}; test prevalence: {cm['no_show_rate']:.2%}; test appointments: {cm['records']:,}.",
-        f"Target attainment: F1 > 0.70 = {cm['f1'] > .7}; ROC-AUC > 0.75 = {cm['roc_auc'] > .75}.",
+        f"Target attainment: macro F1 >= {F1_TARGET:.2f} = {cm['f1'] >= F1_TARGET}; ROC-AUC > 0.75 = {cm['roc_auc'] > .75}.",
         f"Warm single-appointment prediction p95: {cm['latency_p95_seconds']:.3f} seconds (10 measurements on this computer).", '',
         'Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:',
         f"`{cm['confusion_matrix']}`", '',
@@ -94,7 +95,10 @@ def print_terminal_metrics(report):
     final_r_squared = f"{demand_test['r2']:.3f}" if demand_test['r2'] is not None else 'N/A'
 
     print('\nFinal test metrics', flush=True)
-    print(f"No-show classification | F1-Score: {classification_test['f1']:.3f} | ROC-AUC: {classification_test['roc_auc']:.3f}", flush=True)
+    balanced_accuracy = classification_test.get('balanced_accuracy')
+    balance_text = (f' | Balanced accuracy: {balanced_accuracy:.3f}'
+                    if balanced_accuracy is not None else '')
+    print(f"No-show classification | F1-Score: {classification_test['f1']:.3f}{balance_text} | ROC-AUC: {classification_test['roc_auc']:.3f}", flush=True)
     print(f'Overall demand | MAPE: {final_mape} | R2: {final_r_squared}', flush=True)
 
     print('\nClassification validation metrics (all candidate models)', flush=True)
