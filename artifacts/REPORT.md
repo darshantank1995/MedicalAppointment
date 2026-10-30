@@ -6,14 +6,14 @@ Date range: 2020-01-01 to 2021-12-05.
 ## No-show classification
 
 Selected model: **LightGBM**, chosen by validation F1 with ROC-AUC as the tie-breaker, using a validation-tuned F1 threshold.
-Untouched stratified test: F1 **0.620**, ROC-AUC **0.764**, precision **0.517**, recall **0.773**.
-PR-AUC (average precision): 0.554; Brier score: 0.176.
-Threshold: 0.332; test prevalence: 31.81%; test appointments: 21,891.
+Untouched stratified test: F1 **0.620**, ROC-AUC **0.764**, precision **0.517**, recall **0.776**.
+PR-AUC (average precision): 0.556; Brier score: 0.176.
+Threshold: 0.328; test prevalence: 31.81%; test appointments: 21,891.
 Target attainment: F1 > 0.70 = False; ROC-AUC > 0.75 = True.
-Warm single-appointment prediction p95: 0.563 seconds (10 measurements on this computer).
+Warm single-appointment prediction p95: 0.142 seconds (10 measurements on this computer).
 
 Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:
-`[[9900, 5027], [1580, 5384]]`
+`[[9877, 5050], [1563, 5401]]`
 
 ## Overall demand
 
@@ -21,7 +21,7 @@ Selected model: **Weekly seasonal baseline**, chosen by MAE on three expanding 2
 Final test comprises two successive 28-day forecasts, 2021-10-11 to 2021-12-05.
 MAE: **101.57** appointments/day; RMSE: **193.42**; MAPE: **106.40%**; R²: **-1.724**.
 Target attainment: MAPE < 20% = False; R² > 0.65 = False.
-28-day prediction latency: 0.002 seconds.
+28-day prediction latency: 0.001 seconds.
 Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain them.
 
 ## Specialty forecasts
@@ -42,11 +42,11 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 ## Interpretation and operational recommendations
 
 Largest validation permutation signals (decrease in ROC-AUC when shuffled):
-- place: 0.1834 (repeat SD 0.0123).
-- age: 0.0181 (repeat SD 0.0025).
-- specialty: 0.0098 (repeat SD 0.0013).
-- appointment_hour: 0.0048 (repeat SD 0.0013).
-- disability: 0.0048 (repeat SD 0.0031).
+- place: 0.1856 (repeat SD 0.0123).
+- age: 0.0173 (repeat SD 0.0025).
+- specialty: 0.0099 (repeat SD 0.0009).
+- appointment_hour: 0.0055 (repeat SD 0.0013).
+- disability: 0.0050 (repeat SD 0.0030).
 
 These are predictive associations, not causal explanations. Very small changes imply weak ranking evidence.
 

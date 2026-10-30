@@ -19,7 +19,7 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import (average_precision_score, brier_score_loss, confusion_matrix,
     f1_score, mean_absolute_error, mean_squared_error, precision_recall_curve, precision_score, recall_score,
     r2_score, roc_auc_score)
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier, XGBRegressor
@@ -148,6 +148,34 @@ def f1_optimal_threshold(y_true, probabilities):
     return float(thresholds[int(np.nanargmax(scores))])
 
 
+TUNING_SPACES = {
+    'Logistic regression': {'estimate__C': [.05, .2, .75, 2.]},
+    'Random forest': {'estimate__n_estimators': [120, 180], 'estimate__max_depth': [8, 12, 16],
+                      'estimate__min_samples_leaf': [10, 20, 35]},
+    'Histogram gradient boosting': {'estimate__max_iter': [120, 180, 240],
+                                   'estimate__max_leaf_nodes': [10, 15, 24],
+                                   'estimate__l2_regularization': [3., 10., 25.]},
+    'XGBoost': {'estimate__n_estimators': [160, 220, 280], 'estimate__max_depth': [3, 5, 7],
+                'estimate__learning_rate': [.03, .05, .08], 'estimate__min_child_weight': [5, 10, 20]},
+    'LightGBM': {'estimate__n_estimators': [160, 220, 280], 'estimate__num_leaves': [8, 15, 24],
+                 'estimate__learning_rate': [.03, .05, .08], 'estimate__min_child_samples': [15, 30, 50]},
+}
+
+
+def tune_classifier(name, estimator, frame):
+    """Tune only on the fitting partition; calibration, validation and test stay unseen."""
+    pipeline = Pipeline([('prepare', make_preprocessor()), ('estimate', estimator)])
+    search = RandomizedSearchCV(
+        pipeline, TUNING_SPACES[name], n_iter=3, scoring='average_precision',
+        cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED),
+        refit=True, random_state=SEED, n_jobs=1,
+    )
+    search.fit(frame[FEATURES], frame.no_show)
+    parameters = {key.removeprefix('estimate__'): value for key, value in search.best_params_.items()}
+    return search.best_estimator_, {'cv_average_precision': float(search.best_score_),
+                                    'best_parameters': parameters}
+
+
 def fit_classifier(d):
     """Use a stratified 60/10/10/20 split for fitting, calibration, selection, and testing."""
     if len(d) < 100 or 'no_show' not in d or d.no_show.nunique() != 2:
@@ -162,6 +190,9 @@ def fit_classifier(d):
         calibration_and_validation, test_size=.5,
         stratify=calibration_and_validation.no_show, random_state=SEED,
     )
+    negative_count = int((fit.no_show == 0).sum())
+    positive_count = int((fit.no_show == 1).sum())
+    no_show_weight = negative_count / positive_count
     for frame in [fit, calibrate, validation, test]:
         if frame.no_show.nunique() != 2:
             raise ValueError('Every classification partition must contain both outcomes.')
@@ -173,22 +204,22 @@ def fit_classifier(d):
             max_leaf_nodes=15, l2_regularization=10, class_weight='balanced', random_state=SEED),
         'XGBoost': XGBClassifier(n_estimators=220, max_depth=5, learning_rate=.05,
             min_child_weight=10, subsample=.8, colsample_bytree=.8, reg_lambda=10,
-            eval_metric='logloss', n_jobs=2, random_state=SEED),
+            scale_pos_weight=no_show_weight, eval_metric='logloss', n_jobs=2, random_state=SEED),
         'LightGBM': LGBMClassifier(n_estimators=220, num_leaves=15, learning_rate=.05,
             min_child_samples=30, subsample=.8, colsample_bytree=.8, reg_lambda=10,
             class_weight='balanced', n_jobs=2, random_state=SEED, verbosity=-1)
     }
     candidates, rows = {}, []
     for name, estimator in estimators.items():
-        print('Classification:', name, flush=True)
-        pipeline = Pipeline([('prepare', make_preprocessor()), ('estimate', estimator)])
-        pipeline.fit(fit[FEATURES], fit.no_show)
+        print('Tuning classification:', name, flush=True)
+        pipeline, tuning = tune_classifier(name, estimator, fit)
         model = CalibratedClassifierCV(FrozenEstimator(pipeline), method='sigmoid')
         model.fit(calibrate[FEATURES], calibrate.no_show)
         p = model.predict_proba(validation[FEATURES])[:, 1]
         threshold = f1_optimal_threshold(validation.no_show, p)
         metrics = classification_metrics(validation.no_show, p, threshold)
-        rows.append({'model': name, **{k: v for k, v in metrics.items() if k != 'confusion_matrix'}})
+        rows.append({'model': name, **tuning,
+                     **{k: v for k, v in metrics.items() if k != 'confusion_matrix'}})
         candidates[name] = (model, threshold)
     # The stated clinic target requires both F1 and ROC-AUC. Select first by
     # F1, then use ROC-AUC as the tie-breaker; the final test remains untouched.
@@ -226,6 +257,9 @@ def fit_classifier(d):
     report = {'selected_model': selected, 'test': test_metrics,
         'validation_comparison': scores.to_dict('records'), 'outreach': outreach,
         'split_strategy': 'stratified train_test_split with random_state=42',
+        'class_balance': {'training_attended': negative_count, 'training_no_show': positive_count,
+                          'no_show_weight': no_show_weight,
+                          'strategy': 'class weights; XGBoost scale_pos_weight; validation and test unchanged'},
         'splits': {name: {'rows': len(frame), 'no_show_rate': float(frame.no_show.mean())}
                    for name, frame in zip(['fit', 'calibration', 'validation', 'test'], [fit, calibrate, validation, test])},
         'targets_met': {'f1_above_0_70': test_metrics['f1'] > .7, 'roc_auc_above_0_75': test_metrics['roc_auc'] > .75}}
