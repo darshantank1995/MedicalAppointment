@@ -146,8 +146,7 @@ def main():
         backtest.to_csv(args.output / f'backtest_{slug}.csv', index_label='date')
         forecast_table(bundles[name], 28).to_csv(args.output / f'forecast_{slug}.csv', index=False)
     joblib.dump(bundles, args.output / 'forecasters.joblib', compress=3)
-    for field in ['specialty', 'place', 'gender', 'disability', 'appointment_shift',
-                  'hipertension', 'diabetes', 'patient_needs_companion', 'day_of_week']:
+    for field in ['specialty', 'place', 'gender', 'disability']:
         summary = d.groupby(field, dropna=False).agg(appointments=('no_show', 'size'), no_show_rate=('no_show', 'mean')).sort_values('appointments', ascending=False)
         summary.head(30).to_csv(args.output / f'eda_{field}.csv')
     daily_series(d).to_csv(args.output / 'daily_demand.csv', index_label='date')

@@ -26,16 +26,15 @@ from xgboost import XGBClassifier, XGBRegressor
 
 SEED = 42
 DATE = 'appointment_date_continuous'
-REMOVED_SOURCE_COLUMNS = ('average_rain_day', 'max_rain_day')
-CATEGORIES = ['gender', 'specialty', 'disability', 'appointment_shift']
-NUMERIC = ['age', 'appointment_hour', 'patient_needs_companion', 'hipertension',
-    'diabetes', 'alcoholism', 'handcap', 'scholarship', 'rainy_day_before',
-    'storm_day_before', 'day_of_week', 'month_sin',
-    'month_cos', 'day_of_year_sin', 'day_of_year_cos', 'companion_child', 'chronic_count']
+REMOVED_SOURCE_COLUMNS = ('average_rain_day', 'max_rain_day', 'diabetes',
+    'scholarship', 'alcoholism', 'hipertension', 'patient_needs_companion',
+    'handcap', 'companion_child', 'chronic_count', 'month_sin', 'appointment_shift',
+    'storm_day_before')
+CATEGORIES = ['gender', 'specialty', 'disability']
+NUMERIC = ['age', 'appointment_hour', 'rainy_day_before']
 CATEGORICAL = CATEGORIES + ['place']
 FEATURES = NUMERIC + CATEGORICAL
-BINARY = ['patient_needs_companion', 'hipertension', 'diabetes', 'alcoholism',
-    'handcap', 'scholarship', 'rainy_day_before', 'storm_day_before']
+BINARY = ['rainy_day_before']
 
 
 def target_values(series):
@@ -76,8 +75,6 @@ def prepare_data(raw):
         raise ValueError('Appointment dates contain missing or invalid values.')
     if 'no_show' in d:
         d['no_show'] = target_values(d['no_show'])
-    if 'patient_needs_companion' not in d and 'needs_companion' in d:
-        d['patient_needs_companion'] = d['needs_companion']
     if 'appointment_hour' not in d and 'appointment_time' in d:
         d['appointment_hour'] = pd.to_numeric(d['appointment_time'], errors='coerce')
     for c in NUMERIC:
@@ -96,13 +93,6 @@ def prepare_data(raw):
     d['place'] = d.place.astype('string').str.strip().fillna('Unknown')
     d['under_12'] = (d.age < 12).astype(float).where(d.age.notna())
     d['over_60'] = (d.age > 60).astype(float).where(d.age.notna())
-    d['day_of_week'] = d[DATE].dt.dayofweek
-    d['month_sin'] = np.sin(2 * np.pi * d[DATE].dt.month / 12)
-    d['month_cos'] = np.cos(2 * np.pi * d[DATE].dt.month / 12)
-    d['day_of_year_sin'] = np.sin(2 * np.pi * d[DATE].dt.dayofyear / 365.25)
-    d['day_of_year_cos'] = np.cos(2 * np.pi * d[DATE].dt.dayofyear / 365.25)
-    d['companion_child'] = d.patient_needs_companion * d.under_12
-    d['chronic_count'] = d[['hipertension', 'diabetes']].sum(axis=1, min_count=2)
     return d.sort_values(DATE, kind='stable').reset_index(drop=True)
 
 

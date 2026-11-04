@@ -86,7 +86,10 @@ def test_saved_classifier_handles_new_city_and_missing_values():
 
 
 def test_predictors_exclude_outcomes_and_realised_same_day_weather():
-    assert not set(FEATURES) & {'no_show', 'sms_received', 'average_temp_day', 'average_rain_day', 'max_temp_day', 'max_rain_day'}
+    assert not set(FEATURES) & {'no_show', 'sms_received', 'average_temp_day', 'average_rain_day', 'max_temp_day', 'max_rain_day',
+                                'diabetes', 'scholarship', 'alcoholism', 'hipertension', 'patient_needs_companion', 'handcap',
+                                'companion_child', 'chronic_count', 'month_sin', 'appointment_shift', 'day_of_week',
+                                'month_cos', 'storm_day_before', 'day_of_year_cos', 'day_of_year_sin'}
 
 
 def test_saved_comparisons_include_boosted_models():

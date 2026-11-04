@@ -1,19 +1,19 @@
 # CER appointment analytics: measured results
 
-Input: 96,338 appointments; observed no-show rate 32.49%.
+Input: 96,337 appointments; observed no-show rate 32.49%.
 Date range: 2020-01-01 to 2021-05-12.
 
 ## No-show classification
 
 Selected model: **XGBoost**, chosen by validation macro F1 with ROC-AUC as the tie-breaker, using a validation-tuned macro-F1 threshold.
-Untouched stratified test: macro F1 **0.685**, balanced accuracy **0.712**, ROC-AUC **0.758**, precision **0.525**, recall **0.752**.
-PR-AUC (average precision): 0.555; Brier score: 0.179.
-Threshold: 0.426; test prevalence: 32.49%; test appointments: 19,268.
+Untouched stratified test: macro F1 **0.683**, balanced accuracy **0.697**, ROC-AUC **0.759**, precision **0.538**, recall **0.670**.
+PR-AUC (average precision): 0.560; Brier score: 0.179.
+Threshold: 0.465; test prevalence: 32.49%; test appointments: 19,268.
 ROC-AUC target attainment (> 0.75): True.
-Warm single-appointment prediction p95: 0.143 seconds (10 measurements on this computer).
+Warm single-appointment prediction p95: 0.149 seconds (10 measurements on this computer).
 
 Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:
-`[[8752, 4255], [1554, 4707]]`
+`[[9406, 3601], [2064, 4197]]`
 
 ## Overall demand
 
@@ -35,18 +35,18 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 | occupational therapy | Weekly seasonal baseline | 16.23 | 144.3% | -0.207 |
 | pedagogo | Weekly seasonal baseline | 6.27 | 123.2% | -0.596 |
 | physiotherapy | Ridge regression | 35.85 | 1473.4% | -0.006 |
-| psychotherapy | LightGBM | 67.78 | 2729.7% | -0.181 |
+| psychotherapy | Weekly seasonal baseline | 39.75 | 986.4% | -0.019 |
 | sem especialidade | Weekly seasonal baseline | 0.73 | 87.6% | -0.132 |
 | speech therapy | Ridge regression | 45.62 | 1837.5% | -0.023 |
 
 ## Interpretation and operational recommendations
 
 Largest validation permutation signals (decrease in ROC-AUC when shuffled):
-- place: 0.1707 (repeat SD 0.0097).
-- age: 0.0208 (repeat SD 0.0012).
-- specialty: 0.0162 (repeat SD 0.0027).
-- appointment_hour: 0.0036 (repeat SD 0.0011).
-- disability: 0.0031 (repeat SD 0.0016).
+- place: 0.1883 (repeat SD 0.0101).
+- specialty: 0.0117 (repeat SD 0.0032).
+- appointment_hour: 0.0089 (repeat SD 0.0039).
+- age: 0.0089 (repeat SD 0.0030).
+- disability: 0.0078 (repeat SD 0.0014).
 
 These are predictive associations, not causal explanations. Very small changes imply weak ranking evidence.
 
@@ -58,7 +58,7 @@ These are predictive associations, not causal explanations. Very small changes i
 
 ## Scenario estimates (not measured intervention effects)
 
-Contacting the highest-risk 20% captured 36.9% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.4% relative reduction, or 2.40 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
+Contacting the highest-risk 20% captured 36.6% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.3% relative reduction, or 2.38 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
 Overall test MAE changed by 0.0% relative to a weekly seasonal baseline (positive means improvement). This is a forecast-error comparison, not an observed staffing-efficiency gain. Staff hours require specialty-specific service duration, working hours and utilisation assumptions.
 
 ## Data and evaluation limitations
