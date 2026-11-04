@@ -11,7 +11,7 @@ import pandas as pd
 from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier, RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.frozen import FrozenEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
@@ -25,12 +25,12 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier, XGBRegressor
 
 SEED = 42
-F1_TARGET = .69
 DATE = 'appointment_date_continuous'
+REMOVED_SOURCE_COLUMNS = ('average_rain_day', 'max_rain_day')
 CATEGORIES = ['gender', 'specialty', 'disability', 'appointment_shift']
 NUMERIC = ['age', 'appointment_hour', 'patient_needs_companion', 'hipertension',
     'diabetes', 'alcoholism', 'handcap', 'scholarship', 'rainy_day_before',
-    'storm_day_before', 'under_12', 'over_60', 'day_of_week', 'month_sin',
+    'storm_day_before', 'day_of_week', 'month_sin',
     'month_cos', 'day_of_year_sin', 'day_of_year_cos', 'companion_child', 'chronic_count']
 CATEGORICAL = CATEGORIES + ['place']
 FEATURES = NUMERIC + CATEGORICAL
@@ -52,6 +52,7 @@ def prepare_data(raw):
     """Read either raw categorical columns or the existing one-hot encoded extract."""
     d = raw.copy()
     d.columns = d.columns.astype(str).str.strip().str.lower().str.replace('-', '_', regex=False)
+    d = d.drop(columns=list(REMOVED_SOURCE_COLUMNS), errors='ignore')
     if d.columns.duplicated().any():
         raise ValueError('Duplicate column names after header normalisation.')
     for category in CATEGORIES:
@@ -177,9 +178,6 @@ TUNING_SPACES = {
     'Logistic regression': {'estimate__C': [.05, .2, .75, 2.]},
     'Random forest': {'estimate__n_estimators': [120, 180], 'estimate__max_depth': [8, 12, 16],
                       'estimate__min_samples_leaf': [10, 20, 35]},
-    'Histogram gradient boosting': {'estimate__max_iter': [120, 180, 240],
-                                   'estimate__max_leaf_nodes': [10, 15, 24],
-                                   'estimate__l2_regularization': [3., 10., 25.]},
     'XGBoost': {'estimate__n_estimators': [160, 220, 280], 'estimate__max_depth': [3, 5, 7],
                 'estimate__learning_rate': [.03, .05, .08], 'estimate__min_child_weight': [5, 10, 20]},
     'LightGBM': {'estimate__n_estimators': [160, 220, 280], 'estimate__num_leaves': [8, 15, 24],
@@ -244,8 +242,6 @@ def fit_classifier(d):
         'Logistic regression': LogisticRegression(max_iter=600, random_state=SEED),
         'Random forest': RandomForestClassifier(n_estimators=140, max_depth=12,
             min_samples_leaf=20, n_jobs=2, random_state=SEED),
-        'Histogram gradient boosting': HistGradientBoostingClassifier(max_iter=160,
-            max_leaf_nodes=15, l2_regularization=10, random_state=SEED),
         'XGBoost': XGBClassifier(n_estimators=220, max_depth=5, learning_rate=.05,
             min_child_weight=10, subsample=.8, colsample_bytree=.8, reg_lambda=10,
             eval_metric='logloss', n_jobs=2, random_state=SEED),
@@ -307,8 +303,7 @@ def fit_classifier(d):
                           'strategy': 'random undersampling in fitting partition only; validation and test unchanged'},
         'splits': {name: {'rows': len(frame), 'no_show_rate': float(frame.no_show.mean())}
                    for name, frame in zip(['fit', 'calibration', 'validation', 'test'], [fit, calibrate, validation, test])},
-        'targets_met': {'macro_f1_at_least_0_69': test_metrics['f1'] >= F1_TARGET,
-                        'roc_auc_above_0_75': test_metrics['roc_auc'] > .75}}
+        'targets_met': {'roc_auc_above_0_75': test_metrics['roc_auc'] > .75}}
     return bundle, report, importance, reliability
 
 

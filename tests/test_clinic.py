@@ -5,7 +5,7 @@ import json
 import numpy as np
 import pandas as pd
 import pytest
-from clinic_ml import (DATE, FEATURES, F1_TARGET, classification_metrics, prepare_data,
+from clinic_ml import (DATE, FEATURES, classification_metrics, prepare_data,
     target_values, recursive_forecast, regression_metrics, no_show_summary,
     f1_optimal_threshold, balance_training_frame)
 from train_models import DEFAULT_DATA, print_terminal_metrics

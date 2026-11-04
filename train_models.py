@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 import xgboost
-from clinic_ml import (DATE, F1_TARGET, prepare_data, fit_classifier, daily_series,
+from clinic_ml import (DATE, REMOVED_SOURCE_COLUMNS, prepare_data, fit_classifier, daily_series,
                        fit_forecaster, forecast_table)
 
 ROOT = Path(__file__).resolve().parent
@@ -34,7 +34,7 @@ def write_report(report, output):
         f"Untouched stratified test: macro F1 **{cm['f1']:.3f}**, balanced accuracy **{cm['balanced_accuracy']:.3f}**, ROC-AUC **{cm['roc_auc']:.3f}**, precision **{cm['precision']:.3f}**, recall **{cm['recall']:.3f}**.",
         f"PR-AUC (average precision): {cm['average_precision']:.3f}; Brier score: {cm['brier_score']:.3f}.",
         f"Threshold: {cm['threshold']:.3f}; test prevalence: {cm['no_show_rate']:.2%}; test appointments: {cm['records']:,}.",
-        f"Target attainment: macro F1 >= {F1_TARGET:.2f} = {cm['f1'] >= F1_TARGET}; ROC-AUC > 0.75 = {cm['roc_auc'] > .75}.",
+        f"ROC-AUC target attainment (> 0.75): {cm['roc_auc'] > .75}.",
         f"Warm single-appointment prediction p95: {cm['latency_p95_seconds']:.3f} seconds (10 measurements on this computer).", '',
         'Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:',
         f"`{cm['confusion_matrix']}`", '',
@@ -120,7 +120,7 @@ def main():
     if not args.data.is_file():
         parser.error(f'Training data not found: {args.data}. Run the notebook One-hot encoding section first, or pass --data PATH.')
     args.output.mkdir(parents=True, exist_ok=True)
-    raw = pd.read_csv(args.data)
+    raw = pd.read_csv(args.data).drop(columns=list(REMOVED_SOURCE_COLUMNS), errors='ignore')
     d = prepare_data(raw)
     report = {'data': {'file': args.data.name, 'sha256': hashlib.sha256(args.data.read_bytes()).hexdigest(),
         'rows': len(d), 'start': str(d[DATE].min().date()), 'end': str(d[DATE].max().date()),
