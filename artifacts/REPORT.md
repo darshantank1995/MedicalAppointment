@@ -1,25 +1,25 @@
 # CER appointment analytics: measured results
 
-Input: 96,337 appointments; observed no-show rate 32.49%.
+Input: 96,922 appointments; observed no-show rate 32.50%.
 Date range: 2020-01-01 to 2021-05-12.
 
 ## No-show classification
 
-Selected model: **XGBoost**, chosen by validation macro F1 with ROC-AUC as the tie-breaker, using a validation-tuned macro-F1 threshold.
-Untouched stratified test: macro F1 **0.686**, balanced accuracy **0.711**, ROC-AUC **0.761**, precision **0.530**, recall **0.736**.
-PR-AUC (average precision): 0.560; Brier score: 0.179.
-Threshold: 0.428; test prevalence: 32.49%; test appointments: 19,268.
+Selected model: **LightGBM**, chosen by validation macro F1 with ROC-AUC as the tie-breaker, using a validation-tuned macro-F1 threshold.
+Untouched stratified test: macro F1 **0.694**, balanced accuracy **0.726**, ROC-AUC **0.778**, precision **0.532**, recall **0.785**.
+PR-AUC (average precision): 0.565; Brier score: 0.172.
+Threshold: 0.415; test prevalence: 32.50%; test appointments: 19,385.
 ROC-AUC target attainment (> 0.75): True.
-Warm single-appointment prediction p95: 0.126 seconds (10 measurements on this computer).
+Warm single-appointment prediction p95: 0.210 seconds (10 measurements on this computer).
 
 Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:
-`[[8922, 4085], [1653, 4608]]`
+`[[8727, 4357], [1353, 4948]]`
 
 ## Overall demand
 
 Selected model: **Weekly seasonal baseline**, chosen by MAE on three expanding 28-day validation blocks.
 Final test comprises two successive 28-day forecasts, 2021-03-18 to 2021-05-12.
-MAE: **146.73** appointments/day; RMSE: **278.78**; MAPE: **3272.40%**; R²: **-0.078**.
+MAE: **147.61** appointments/day; RMSE: **280.70**; MAPE: **3292.83%**; R²: **-0.081**.
 Target attainment: MAPE < 20% = False; R² > 0.65 = False.
 28-day prediction latency: 0.001 seconds.
 Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain them.
@@ -28,25 +28,25 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 
 | Specialty | Model | MAE | MAPE | R² |
 |---|---|---:|---:|---:|
-| All specialties | Weekly seasonal baseline | 146.73 | 3272.4% | -0.078 |
-| assist | Ridge regression | 1.07 | 44.7% | -0.111 |
-| enf | Ridge regression | 2.50 | 98.5% | -0.064 |
-| general | Weekly seasonal baseline | 26.89 | 414.8% | -0.005 |
-| occupational therapy | Weekly seasonal baseline | 16.23 | 144.3% | -0.207 |
-| pedagogo | Weekly seasonal baseline | 6.27 | 123.2% | -0.596 |
-| physiotherapy | Ridge regression | 35.85 | 1473.4% | -0.006 |
-| psychotherapy | Weekly seasonal baseline | 39.75 | 986.4% | -0.019 |
+| All specialties | Weekly seasonal baseline | 147.61 | 3292.8% | -0.081 |
+| assist | Ridge regression | 1.09 | 45.5% | -0.103 |
+| enf | Ridge regression | 2.51 | 88.9% | -0.069 |
+| general | Weekly seasonal baseline | 27.09 | 415.0% | -0.007 |
+| occupational therapy | Weekly seasonal baseline | 16.27 | 144.1% | -0.202 |
+| pedagogo | Weekly seasonal baseline | 6.25 | 122.1% | -0.582 |
+| physiotherapy | XGBoost | 40.36 | 1659.5% | -0.113 |
+| psychotherapy | LightGBM | 72.31 | 2960.2% | -0.317 |
 | sem especialidade | Weekly seasonal baseline | 0.73 | 87.6% | -0.132 |
-| speech therapy | Ridge regression | 45.62 | 1837.5% | -0.023 |
+| speech therapy | Ridge regression | 45.77 | 1843.8% | -0.024 |
 
 ## Interpretation and operational recommendations
 
 Largest validation permutation signals (decrease in ROC-AUC when shuffled):
-- place: 0.1866 (repeat SD 0.0101).
-- specialty: 0.0128 (repeat SD 0.0026).
-- age: 0.0118 (repeat SD 0.0039).
-- appointment_hour: 0.0100 (repeat SD 0.0038).
-- disability: 0.0078 (repeat SD 0.0021).
+- place: 0.2276 (repeat SD 0.0179).
+- age: 0.0258 (repeat SD 0.0037).
+- disability: 0.0141 (repeat SD 0.0010).
+- gender: 0.0058 (repeat SD 0.0024).
+- specialty: 0.0018 (repeat SD 0.0002).
 
 These are predictive associations, not causal explanations. Very small changes imply weak ranking evidence.
 
@@ -58,7 +58,7 @@ These are predictive associations, not causal explanations. Very small changes i
 
 ## Scenario estimates (not measured intervention effects)
 
-Contacting the highest-risk 20% captured 36.3% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.3% relative reduction, or 2.36 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
+Contacting the highest-risk 20% captured 36.6% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.3% relative reduction, or 2.38 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
 Overall test MAE changed by 0.0% relative to a weekly seasonal baseline (positive means improvement). This is a forecast-error comparison, not an observed staffing-efficiency gain. Staff hours require specialty-specific service duration, working hours and utilisation assumptions.
 
 ## Data and evaluation limitations

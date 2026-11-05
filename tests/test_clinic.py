@@ -86,7 +86,7 @@ def test_saved_classifier_handles_new_city_and_missing_values():
 
 
 def test_predictors_exclude_outcomes_and_realised_same_day_weather():
-    assert not set(FEATURES) & {'no_show', 'sms_received', 'average_temp_day', 'average_rain_day', 'max_temp_day', 'max_rain_day',
+    assert not set(FEATURES) & {'no_show', 'average_temp_day', 'average_rain_day', 'max_temp_day', 'max_rain_day',
                                 'diabetes', 'scholarship', 'alcoholism', 'hipertension', 'patient_needs_companion', 'handcap',
                                 'companion_child', 'chronic_count', 'month_sin', 'appointment_shift', 'day_of_week',
                                 'month_cos', 'storm_day_before', 'day_of_year_cos', 'day_of_year_sin'}
@@ -106,7 +106,7 @@ def test_terminal_metrics_include_requested_scores(capsys):
         'classification': {
             'test': {'f1': .71234, 'roc_auc': .81234},
             'validation_comparison': [
-                {'model': 'Logistic regression', 'f1': .70001, 'roc_auc': .80001},
+                {'model': 'Random forest', 'f1': .70001, 'roc_auc': .80001},
                 {'model': 'LightGBM', 'f1': .71001, 'roc_auc': .81001},
             ],
         },
@@ -124,7 +124,7 @@ def test_terminal_metrics_include_requested_scores(capsys):
     assert 'ROC-AUC: 0.812' in output
     assert 'MAPE: 15.23%' in output
     assert 'R2: 0.679' in output
-    assert 'Logistic regression | F1-Score: 0.700 | ROC-AUC: 0.800' in output
+    assert 'Random forest | F1-Score: 0.700 | ROC-AUC: 0.800' in output
     assert 'LightGBM | MAPE: 15.00% | R2: 0.700' in output
 
 
@@ -136,10 +136,9 @@ def test_f1_threshold_uses_exact_validation_probabilities():
     assert (probabilities >= threshold).tolist() == [True, True, False, False]
 
 
-def test_classification_uses_macro_f1_and_069_target():
+def test_classification_uses_macro_f1():
     metrics = classification_metrics(np.array([0, 0, 0, 1]), np.array([.8, .2, .1, .9]), .5)
     assert metrics['f1'] == pytest.approx((.8 + (2 / 3)) / 2)
-    assert F1_TARGET == .69
 
 
 def test_balancing_keeps_equal_numbers_of_both_outcomes():

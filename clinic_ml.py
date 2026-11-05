@@ -31,10 +31,13 @@ REMOVED_SOURCE_COLUMNS = ('average_rain_day', 'max_rain_day', 'diabetes',
     'handcap', 'companion_child', 'chronic_count', 'month_sin', 'appointment_shift',
     'storm_day_before')
 CATEGORIES = ['gender', 'specialty', 'disability']
-NUMERIC = ['age', 'appointment_hour', 'rainy_day_before']
+NUMERIC = ['age', 'appointment_hour', 'rainy_day_before', 'sms_received']
 CATEGORICAL = CATEGORIES + ['place']
 FEATURES = NUMERIC + CATEGORICAL
-BINARY = ['rainy_day_before']
+# These inputs are recorded before the appointment.  ``sms_received`` is kept
+# separate from the outcome: it describes the reminder status already known at
+# scoring time, rather than whether the person ultimately attended.
+BINARY = ['rainy_day_before', 'sms_received']
 
 
 def target_values(series):
@@ -177,8 +180,11 @@ TUNING_SPACES = {
                  'estimate__reg_lambda': [1., 5., 10., 25.]},
 }
 
-# Search more parameter types while keeping the experiment repeatable and bounded.
-TUNING_ITERATIONS = 12
+# Search more parameter types while keeping the experiment repeatable and
+# practical on the full appointment extract. Forest fits are much slower than
+# the boosting candidates, so their smaller search budget leaves time for the
+# models that have been strongest in validation.
+TUNING_ITERATIONS = {'Random forest': 3, 'XGBoost': 12, 'LightGBM': 12}
 
 
 def tune_classifier(name, estimator, frame, sample_weight=None):
@@ -186,7 +192,7 @@ def tune_classifier(name, estimator, frame, sample_weight=None):
     pipeline = Pipeline([('prepare', make_preprocessor()), ('estimate', estimator)])
     combinations = int(np.prod([len(values) for values in TUNING_SPACES[name].values()]))
     search = RandomizedSearchCV(
-        pipeline, TUNING_SPACES[name], n_iter=min(TUNING_ITERATIONS, combinations),
+        pipeline, TUNING_SPACES[name], n_iter=min(TUNING_ITERATIONS[name], combinations),
         # Optimise the same macro F1 score used for final model selection.
         scoring='f1_macro',
         cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED),

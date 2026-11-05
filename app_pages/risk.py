@@ -13,7 +13,7 @@ metric_row([('Test ROC-AUC', f"{metrics['roc_auc']:.3f}"), ('Test F1', f"{metric
             ('Reminder threshold', f"{bundle['threshold']:.1%}")])
 if not all(report['classification']['targets_met'].values()):
     st.warning('This model does not meet all requested performance targets. Review the evidence before using it to target reminders.')
-st.caption('Prediction time: the evening before the appointment, when prior-day weather is known. Scores support outreach; they must not restrict access to care.')
+st.caption('Prediction time: the evening before the appointment, when prior-day weather and any already-recorded reminder status are known. Scores support outreach; they must not restrict access to care.')
 
 values = {}
 with st.form('appointment_form'):
@@ -32,7 +32,8 @@ with st.form('appointment_form'):
     st.subheader('Patient and prior-day conditions')
     display_names = {'hipertension': 'Hypertension', 'handcap': 'Recorded disability flag',
         'scholarship': 'Scholarship / support flag', 'patient_needs_companion': 'Patient needs a companion',
-        'rainy_day_before': 'Rain on the day before', 'storm_day_before': 'Storm on the day before'}
+        'rainy_day_before': 'Rain on the day before', 'storm_day_before': 'Storm on the day before',
+        'sms_received': 'Reminder SMS already recorded'}
     for i, field in enumerate(BINARY):
         choice = [left, right][i % 2].selectbox(display_names.get(field, label(field)),
             ['Unknown', 'No', 'Yes'], key=f'risk_{field}')
