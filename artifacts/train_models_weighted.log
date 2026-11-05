@@ -1,0 +1,32 @@
+Tuning classification: Logistic regression
+Tuning classification: Random forest
+Tuning classification: XGBoost
+Tuning classification: LightGBM
+Forecast: All specialties
+Forecast: assist
+Forecast: enf
+Forecast: general
+Forecast: occupational therapy
+Forecast: pedagogo
+Forecast: physiotherapy
+Forecast: psychotherapy
+Forecast: sem especialidade
+Forecast: speech therapy
+
+Final test metrics
+No-show classification | F1-Score: 0.685 | Balanced accuracy: 0.708 | ROC-AUC: 0.761
+Overall demand | MAPE: 3272.40% | R2: -0.078
+
+Classification validation metrics (all candidate models)
+LightGBM | F1-Score: 0.694 | ROC-AUC: 0.764
+XGBoost | F1-Score: 0.693 | ROC-AUC: 0.762
+Random forest | F1-Score: 0.692 | ROC-AUC: 0.761
+Logistic regression | F1-Score: 0.684 | ROC-AUC: 0.751
+
+All-specialties demand validation metrics (all candidate models)
+Weekly seasonal baseline | MAPE: 244.34% | R2: -0.035
+Ridge regression | MAPE: 295.05% | R2: -0.047
+Random forest | MAPE: 411.18% | R2: -0.210
+XGBoost | MAPE: 276.85% | R2: -0.056
+LightGBM | MAPE: 297.86% | R2: 0.038
+Saved trained models, metrics and report to F:\py project\MedicalAppointment\artifacts

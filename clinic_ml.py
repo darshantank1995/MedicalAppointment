@@ -15,7 +15,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.frozen import FrozenEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
-from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.linear_model import Ridge
 from sklearn.metrics import (average_precision_score, balanced_accuracy_score, brier_score_loss, confusion_matrix,
     f1_score, mean_absolute_error, mean_squared_error, precision_score, recall_score,
     r2_score, roc_auc_score)
@@ -165,35 +165,39 @@ def f1_optimal_threshold(y_true, probabilities):
 
 
 TUNING_SPACES = {
-    'Logistic regression': {'estimate__C': [.05, .2, .75, 2.]},
-    'Random forest': {'estimate__n_estimators': [120, 180], 'estimate__max_depth': [8, 12, 16],
-                      'estimate__min_samples_leaf': [10, 20, 35]},
-    'XGBoost': {'estimate__n_estimators': [160, 220, 280], 'estimate__max_depth': [3, 5, 7],
-                'estimate__learning_rate': [.03, .05, .08], 'estimate__min_child_weight': [5, 10, 20]},
-    'LightGBM': {'estimate__n_estimators': [160, 220, 280], 'estimate__num_leaves': [8, 15, 24],
-                 'estimate__learning_rate': [.03, .05, .08], 'estimate__min_child_samples': [15, 30, 50]},
+    'Random forest': {'estimate__n_estimators': [100, 160, 220], 'estimate__max_depth': [6, 10, 14, None],
+                      'estimate__min_samples_leaf': [5, 10, 20], 'estimate__max_features': ['sqrt', .7, 1.]},
+    'XGBoost': {'estimate__n_estimators': [120, 200, 300], 'estimate__max_depth': [2, 3, 5, 7],
+                'estimate__learning_rate': [.01, .03, .05, .08], 'estimate__min_child_weight': [1, 5, 10, 20],
+                'estimate__subsample': [.7, .85, 1.], 'estimate__colsample_bytree': [.7, .85, 1.],
+                'estimate__reg_lambda': [1., 5., 10., 25.]},
+    'LightGBM': {'estimate__n_estimators': [120, 200, 300], 'estimate__num_leaves': [7, 15, 31],
+                 'estimate__learning_rate': [.01, .03, .05, .08], 'estimate__min_child_samples': [10, 20, 40, 60],
+                 'estimate__subsample': [.7, .85, 1.], 'estimate__colsample_bytree': [.7, .85, 1.],
+                 'estimate__reg_lambda': [1., 5., 10., 25.]},
 }
 
-# A small, repeatable search that is materially broader than the previous
-# three draws, without making the end-to-end training run impractical.
+# Search more parameter types while keeping the experiment repeatable and bounded.
 TUNING_ITERATIONS = 12
 
 
-def tune_classifier(name, estimator, frame):
+def tune_classifier(name, estimator, frame, sample_weight=None):
     """Tune only on the fitting partition; calibration, validation and test stay unseen."""
     pipeline = Pipeline([('prepare', make_preprocessor()), ('estimate', estimator)])
     combinations = int(np.prod([len(values) for values in TUNING_SPACES[name].values()]))
     search = RandomizedSearchCV(
         pipeline, TUNING_SPACES[name], n_iter=min(TUNING_ITERATIONS, combinations),
-        # Unlike accuracy or average precision alone, this gives attended and
-        # missed appointments equal influence during hyperparameter selection.
-        scoring='balanced_accuracy',
+        # Optimise the same macro F1 score used for final model selection.
+        scoring='f1_macro',
         cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED),
         refit=True, random_state=SEED, n_jobs=1,
     )
-    search.fit(frame[FEATURES], frame.no_show)
+    fit_parameters = {}
+    if sample_weight is not None:
+        fit_parameters['estimate__sample_weight'] = sample_weight
+    search.fit(frame[FEATURES], frame.no_show, **fit_parameters)
     parameters = {key.removeprefix('estimate__'): value for key, value in search.best_params_.items()}
-    return search.best_estimator_, {'cv_balanced_accuracy': float(search.best_score_),
+    return search.best_estimator_, {'cv_macro_f1': float(search.best_score_),
                                     'best_parameters': parameters}
 
 
@@ -206,6 +210,16 @@ def balance_training_frame(frame):
     sampled_attended = attended.sample(n=len(no_shows), random_state=SEED)
     return (pd.concat([no_shows, sampled_attended], ignore_index=True)
         .sample(frac=1, random_state=SEED).reset_index(drop=True))
+
+
+def class_balanced_sample_weight(frame):
+    """Weight no-shows and attended appointments equally without discarding rows."""
+    counts = frame.no_show.value_counts()
+    if set(counts.index) != {0, 1}:
+        raise ValueError('Training data must contain both attendance outcomes.')
+    total = len(frame)
+    weights = frame.no_show.map({label: total / (2 * count) for label, count in counts.items()})
+    return weights.to_numpy(dtype=float)
 
 
 def fit_classifier(d):
@@ -224,12 +238,11 @@ def fit_classifier(d):
     )
     negative_count = int((fit.no_show == 0).sum())
     positive_count = int((fit.no_show == 1).sum())
-    balanced_fit = balance_training_frame(fit)
+    fit_sample_weight = class_balanced_sample_weight(fit)
     for frame in [fit, calibrate, validation, test]:
         if frame.no_show.nunique() != 2:
             raise ValueError('Every classification partition must contain both outcomes.')
     estimators = {
-        'Logistic regression': LogisticRegression(max_iter=600, random_state=SEED),
         'Random forest': RandomForestClassifier(n_estimators=140, max_depth=12,
             min_samples_leaf=20, n_jobs=2, random_state=SEED),
         'XGBoost': XGBClassifier(n_estimators=220, max_depth=5, learning_rate=.05,
@@ -242,7 +255,7 @@ def fit_classifier(d):
     candidates, rows = {}, []
     for name, estimator in estimators.items():
         print('Tuning classification:', name, flush=True)
-        pipeline, tuning = tune_classifier(name, estimator, balanced_fit)
+        pipeline, tuning = tune_classifier(name, estimator, fit, fit_sample_weight)
         model = CalibratedClassifierCV(FrozenEstimator(pipeline), method='sigmoid')
         model.fit(calibrate[FEATURES], calibrate.no_show)
         p = model.predict_proba(validation[FEATURES])[:, 1]
@@ -288,9 +301,9 @@ def fit_classifier(d):
         'validation_comparison': scores.to_dict('records'), 'outreach': outreach,
         'split_strategy': 'stratified train_test_split with random_state=42',
         'class_balance': {'training_attended': negative_count, 'training_no_show': positive_count,
-                          'balanced_training_attended': int((balanced_fit.no_show == 0).sum()),
-                          'balanced_training_no_show': int((balanced_fit.no_show == 1).sum()),
-                          'strategy': 'random undersampling in fitting partition only; validation and test unchanged'},
+                          'weighted_training_attended': float(fit_sample_weight[fit.no_show.to_numpy() == 0].sum()),
+                          'weighted_training_no_show': float(fit_sample_weight[fit.no_show.to_numpy() == 1].sum()),
+                          'strategy': 'inverse-frequency sample weights in fitting partition only; validation and test unchanged'},
         'splits': {name: {'rows': len(frame), 'no_show_rate': float(frame.no_show.mean())}
                    for name, frame in zip(['fit', 'calibration', 'validation', 'test'], [fit, calibrate, validation, test])},
         'targets_met': {'roc_auc_above_0_75': test_metrics['roc_auc'] > .75}}

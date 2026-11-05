@@ -22,7 +22,9 @@ with st.form('appointment_form'):
     values[DATE] = left.date_input('Appointment date', value=(d[DATE].max() + pd.Timedelta(days=1)).date())
     values['appointment_hour'] = right.number_input('Appointment hour (0–23)', min_value=0, max_value=23, value=9)
     values['age'] = left.number_input('Patient age', min_value=0.0, max_value=120.0, value=float(bundle['defaults']['age']))
-    for i, field in enumerate(['specialty', 'gender', 'disability', 'appointment_shift', 'place']):
+    categorical_fields = [field for field in ['specialty', 'gender', 'disability', 'place']
+                          if field in FEATURES and field in bundle['options']]
+    for i, field in enumerate(categorical_fields):
         options = bundle['options'][field]
         options = options + (['Unknown'] if 'Unknown' not in options else [])
         values[field] = [left, right][i % 2].selectbox(label(field), options, key=f'risk_{field}')

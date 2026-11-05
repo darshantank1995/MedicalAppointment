@@ -6,14 +6,14 @@ Date range: 2020-01-01 to 2021-05-12.
 ## No-show classification
 
 Selected model: **XGBoost**, chosen by validation macro F1 with ROC-AUC as the tie-breaker, using a validation-tuned macro-F1 threshold.
-Untouched stratified test: macro F1 **0.683**, balanced accuracy **0.697**, ROC-AUC **0.759**, precision **0.538**, recall **0.670**.
+Untouched stratified test: macro F1 **0.686**, balanced accuracy **0.711**, ROC-AUC **0.761**, precision **0.530**, recall **0.736**.
 PR-AUC (average precision): 0.560; Brier score: 0.179.
-Threshold: 0.465; test prevalence: 32.49%; test appointments: 19,268.
+Threshold: 0.428; test prevalence: 32.49%; test appointments: 19,268.
 ROC-AUC target attainment (> 0.75): True.
-Warm single-appointment prediction p95: 0.149 seconds (10 measurements on this computer).
+Warm single-appointment prediction p95: 0.126 seconds (10 measurements on this computer).
 
 Confusion matrix rows are actual [attended, missed]; columns are predicted [attended, missed]:
-`[[9406, 3601], [2064, 4197]]`
+`[[8922, 4085], [1653, 4608]]`
 
 ## Overall demand
 
@@ -42,11 +42,11 @@ Zero-demand days are excluded only from MAPE; MAE, RMSE, WAPE and R² retain the
 ## Interpretation and operational recommendations
 
 Largest validation permutation signals (decrease in ROC-AUC when shuffled):
-- place: 0.1883 (repeat SD 0.0101).
-- specialty: 0.0117 (repeat SD 0.0032).
-- appointment_hour: 0.0089 (repeat SD 0.0039).
-- age: 0.0089 (repeat SD 0.0030).
-- disability: 0.0078 (repeat SD 0.0014).
+- place: 0.1866 (repeat SD 0.0101).
+- specialty: 0.0128 (repeat SD 0.0026).
+- age: 0.0118 (repeat SD 0.0039).
+- appointment_hour: 0.0100 (repeat SD 0.0038).
+- disability: 0.0078 (repeat SD 0.0021).
 
 These are predictive associations, not causal explanations. Very small changes imply weak ranking evidence.
 
@@ -58,7 +58,7 @@ These are predictive associations, not causal explanations. Very small changes i
 
 ## Scenario estimates (not measured intervention effects)
 
-Contacting the highest-risk 20% captured 36.6% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.3% relative reduction, or 2.38 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
+Contacting the highest-risk 20% captured 36.3% of historical test no-shows. If outreach prevents 20% of missed visits in that group, the scenario gives a 7.3% relative reduction, or 2.36 percentage points of all appointments. Effectiveness must be established by a randomised pilot.
 Overall test MAE changed by 0.0% relative to a weekly seasonal baseline (positive means improvement). This is a forecast-error comparison, not an observed staffing-efficiency gain. Staff hours require specialty-specific service duration, working hours and utilisation assumptions.
 
 ## Data and evaluation limitations
