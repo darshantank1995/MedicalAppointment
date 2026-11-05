@@ -22,6 +22,8 @@ from sklearn.metrics import (average_precision_score, balanced_accuracy_score, b
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from imblearn.over_sampling import ADASYN, SMOTE
+from imblearn.pipeline import Pipeline as ImbalancedPipeline
 from xgboost import XGBClassifier, XGBRegressor
 
 SEED = 42
@@ -38,6 +40,22 @@ FEATURES = NUMERIC + CATEGORICAL
 # separate from the outcome: it describes the reminder status already known at
 # scoring time, rather than whether the person ultimately attended.
 BINARY = ['rainy_day_before', 'sms_received']
+
+
+class ProbabilityEnsemble:
+    """Average calibrated model probabilities for a validation-selected ensemble."""
+
+    def __init__(self, models):
+        self.models = models
+        self.classes_ = np.array([0, 1])
+
+    def predict_proba(self, frame):
+        probabilities = np.mean(
+            [model.predict_proba(frame) for model in self.models], axis=0
+        )
+        # Averaging valid probability pairs is already normalised; normalise
+        # again defensively for compatibility with sklearn metric utilities.
+        return probabilities / probabilities.sum(axis=1, keepdims=True)
 
 
 def target_values(series):
@@ -187,9 +205,51 @@ TUNING_SPACES = {
 TUNING_ITERATIONS = {'Random forest': 3, 'XGBoost': 12, 'LightGBM': 12}
 
 
-def tune_classifier(name, estimator, frame, sample_weight=None):
+def make_resampling_pipeline(estimator, sampler):
+    """Apply synthetic oversampling only after fold-local preprocessing."""
+    return ImbalancedPipeline([
+        ('prepare', make_preprocessor()),
+        ('balance', sampler),
+        ('estimate', estimator),
+    ])
+
+
+def select_resampler(frame):
+    """Choose SMOTE or ADASYN with F1-only cross-validation on fitting rows."""
+    candidates = {
+        'SMOTE': SMOTE(random_state=SEED, k_neighbors=5),
+        'ADASYN': ADASYN(random_state=SEED, n_neighbors=5),
+    }
+    splitter = StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED)
+    scores = {}
+    for name, sampler in candidates.items():
+        fold_scores = []
+        for train_index, validation_index in splitter.split(frame[FEATURES], frame.no_show):
+            model = make_resampling_pipeline(
+                XGBClassifier(n_estimators=120, max_depth=4, learning_rate=.05,
+                    min_child_weight=10, subsample=.85, colsample_bytree=.85,
+                    reg_lambda=10, eval_metric='logloss', n_jobs=2, random_state=SEED),
+                sampler,
+            )
+            train_rows = frame.iloc[train_index]
+            validation_rows = frame.iloc[validation_index]
+            model.fit(train_rows[FEATURES], train_rows.no_show)
+            # The later validation partition chooses the operating threshold.
+            # Use the standard 0.5 decision boundary here so this choice does
+            # not tune a threshold against the same fold being scored.
+            fold_scores.append(f1_score(
+                validation_rows.no_show,
+                model.predict(validation_rows[FEATURES]),
+                average='macro', zero_division=0,
+            ))
+        scores[name] = float(np.mean(fold_scores))
+    selected = max(scores, key=scores.get)
+    return selected, candidates[selected], scores
+
+
+def tune_classifier(name, estimator, frame, sampler):
     """Tune only on the fitting partition; calibration, validation and test stay unseen."""
-    pipeline = Pipeline([('prepare', make_preprocessor()), ('estimate', estimator)])
+    pipeline = make_resampling_pipeline(estimator, sampler)
     combinations = int(np.prod([len(values) for values in TUNING_SPACES[name].values()]))
     search = RandomizedSearchCV(
         pipeline, TUNING_SPACES[name], n_iter=min(TUNING_ITERATIONS[name], combinations),
@@ -198,10 +258,7 @@ def tune_classifier(name, estimator, frame, sample_weight=None):
         cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED),
         refit=True, random_state=SEED, n_jobs=1,
     )
-    fit_parameters = {}
-    if sample_weight is not None:
-        fit_parameters['estimate__sample_weight'] = sample_weight
-    search.fit(frame[FEATURES], frame.no_show, **fit_parameters)
+    search.fit(frame[FEATURES], frame.no_show)
     parameters = {key.removeprefix('estimate__'): value for key, value in search.best_params_.items()}
     return search.best_estimator_, {'cv_macro_f1': float(search.best_score_),
                                     'best_parameters': parameters}
@@ -244,7 +301,7 @@ def fit_classifier(d):
     )
     negative_count = int((fit.no_show == 0).sum())
     positive_count = int((fit.no_show == 1).sum())
-    fit_sample_weight = class_balanced_sample_weight(fit)
+    selected_resampler, sampler, resampling_scores = select_resampler(fit)
     for frame in [fit, calibrate, validation, test]:
         if frame.no_show.nunique() != 2:
             raise ValueError('Every classification partition must contain both outcomes.')
@@ -258,10 +315,10 @@ def fit_classifier(d):
             min_child_samples=30, subsample=.8, colsample_bytree=.8, reg_lambda=10,
             n_jobs=2, random_state=SEED, verbosity=-1)
     }
-    candidates, rows = {}, []
+    candidates, validation_probabilities, rows = {}, {}, []
     for name, estimator in estimators.items():
         print('Tuning classification:', name, flush=True)
-        pipeline, tuning = tune_classifier(name, estimator, fit, fit_sample_weight)
+        pipeline, tuning = tune_classifier(name, estimator, fit, sampler)
         model = CalibratedClassifierCV(FrozenEstimator(pipeline), method='sigmoid')
         model.fit(calibrate[FEATURES], calibrate.no_show)
         p = model.predict_proba(validation[FEATURES])[:, 1]
@@ -270,6 +327,27 @@ def fit_classifier(d):
         rows.append({'model': name, **tuning,
                      **{k: v for k, v in metrics.items() if k != 'confusion_matrix'}})
         candidates[name] = (model, threshold)
+        validation_probabilities[name] = p
+
+    # Averages can reduce one model's individual errors. The ensemble competes
+    # with its members on the same validation partition and is never forced.
+    member_names = list(candidates)
+    ensemble_probability = np.mean(
+        [validation_probabilities[name] for name in member_names], axis=0
+    )
+    ensemble_threshold = f1_optimal_threshold(validation.no_show, ensemble_probability)
+    ensemble_metrics = classification_metrics(
+        validation.no_show, ensemble_probability, ensemble_threshold
+    )
+    ensemble_name = 'Soft voting ensemble'
+    rows.append({'model': ensemble_name,
+                 'cv_macro_f1': np.nan,
+                 'best_parameters': {'members': member_names},
+                 **{k: v for k, v in ensemble_metrics.items() if k != 'confusion_matrix'}})
+    candidates[ensemble_name] = (
+        ProbabilityEnsemble([candidates[name][0] for name in member_names]),
+        ensemble_threshold,
+    )
     # Select first by validation macro F1, then use ROC-AUC as the tie-breaker;
     # the final test remains untouched.
     scores = pd.DataFrame(rows).sort_values(['f1', 'roc_auc'], ascending=False)
@@ -303,13 +381,16 @@ def fit_classifier(d):
     bundle = {'model': model, 'threshold': float(threshold), 'selected_model': selected,
         'defaults': {c: float(fit[c].median()) if fit[c].notna().any() else 0.0 for c in NUMERIC},
         'options': {c: fit[c].value_counts().head(20).index.tolist() for c in CATEGORICAL}}
+    # The ensemble has no independent hyperparameter-search score. Convert its
+    # missing CV field to JSON ``null`` rather than emitting a NaN value.
+    validation_comparison = scores.astype(object).where(pd.notna(scores), None).to_dict('records')
     report = {'selected_model': selected, 'test': test_metrics,
-        'validation_comparison': scores.to_dict('records'), 'outreach': outreach,
+        'validation_comparison': validation_comparison, 'outreach': outreach,
         'split_strategy': 'stratified train_test_split with random_state=42',
         'class_balance': {'training_attended': negative_count, 'training_no_show': positive_count,
-                          'weighted_training_attended': float(fit_sample_weight[fit.no_show.to_numpy() == 0].sum()),
-                          'weighted_training_no_show': float(fit_sample_weight[fit.no_show.to_numpy() == 1].sum()),
-                          'strategy': 'inverse-frequency sample weights in fitting partition only; validation and test unchanged'},
+                          'resampling_candidates_cv_macro_f1': resampling_scores,
+                          'selected_resampler': selected_resampler,
+                          'strategy': f'{selected_resampler} applied only inside fitting and cross-validation folds; calibration, validation and test unchanged'},
         'splits': {name: {'rows': len(frame), 'no_show_rate': float(frame.no_show.mean())}
                    for name, frame in zip(['fit', 'calibration', 'validation', 'test'], [fit, calibrate, validation, test])},
         'targets_met': {'roc_auc_above_0_75': test_metrics['roc_auc'] > .75}}
